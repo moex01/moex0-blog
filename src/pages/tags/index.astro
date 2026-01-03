@@ -1,0 +1,266 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// Get all blog posts (excluding drafts)
+const posts = await getCollection('blog', ({ data }) => data.draft !== true);
+
+// Get all unique tags with their article counts
+const tagCounts = posts.reduce((acc, post) => {
+  post.data.tags.forEach((tag: string) => {
+    acc[tag] = (acc[tag] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+// Convert to array and sort by popularity (most articles first), then alphabetically for ties
+const sortedTags = Object.entries(tagCounts)
+  .sort(([tagA, countA], [tagB, countB]) => {
+    // Sort by count descending (most popular first)
+    if (countB !== countA) return countB - countA;
+    // For ties, sort alphabetically
+    return tagA.localeCompare(tagB);
+  });
+
+const totalTags = sortedTags.length;
+
+// Calculate max count for visual hierarchy scaling
+const maxCount = sortedTags.length > 0 ? sortedTags[0][1] : 0;
+
+// Helper function to determine tag size tier based on article count
+function getTagSizeClass(count: number, max: number): string {
+  if (max <= 1) return ''; // No scaling if only 1 article per tag
+  const ratio = count / max;
+  if (ratio >= 0.75) return 'tag-chip-xl';
+  if (ratio >= 0.5) return 'tag-chip-lg';
+  if (ratio >= 0.25) return 'tag-chip-md';
+  return '';
+}
+---
+
+<BaseLayout
+  title="Tags"
+  description="Browse all tags and topics covered in moex0's cybersecurity blog. Find articles about APT groups, malware analysis, incident response, and more."
+>
+  <section class="tags-page">
+    <!-- Back navigation -->
+    <a
+      href="/"
+      class="back-link"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      cd ../blog
+    </a>
+
+    <!-- Page header -->
+    <header class="page-header">
+      <h1 class="page-title">
+        <span class="prompt">$</span> ls tags/
+      </h1>
+      <p class="page-description">
+        {totalTags} tag{totalTags !== 1 ? 's' : ''} available
+      </p>
+    </header>
+
+    <!-- Tags description -->
+    <div class="tags-description">
+      <p>
+        Browse articles by topic. Tags help categorize content by threat actors, vulnerabilities,
+        tools, and techniques discussed. Click any tag to view related articles.
+      </p>
+    </div>
+
+    <!-- Tags grid -->
+    {sortedTags.length === 0 ? (
+      <div class="empty-state">
+        <p class="empty-text">
+          <span class="empty-prompt">$</span> No tags found. Check back soon!
+        </p>
+      </div>
+    ) : (
+      <div class="tags-grid">
+        {sortedTags.map(([tag, count]) => (
+          <a href={`/tags/${tag}`} class={`tag-chip ${getTagSizeClass(count, maxCount)}`}>
+            <span class="tag-hash">#</span>
+            <span class="tag-name">{tag}</span>
+            <span class="tag-count">({count})</span>
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .tags-page {
+    max-width: 48rem;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent-cyan);
+  }
+
+  .back-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Page header */
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .page-title {
+      font-size: 2.5rem;
+    }
+  }
+
+  .prompt {
+    color: var(--color-accent-green);
+  }
+
+  .page-description {
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    margin: 0;
+  }
+
+  /* Tags description */
+  .tags-description {
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+  }
+
+  .tags-description p {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Tags grid */
+  .tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Tag chip */
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.5rem 0.875rem;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .tag-chip:hover {
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan);
+    background-color: var(--color-bg-tertiary);
+  }
+
+  .tag-hash {
+    color: var(--color-accent-indigo);
+  }
+
+  .tag-name {
+    color: inherit;
+  }
+
+  .tag-count {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    margin-left: 0.25rem;
+  }
+
+  .tag-chip:hover .tag-count {
+    color: var(--color-accent-cyan);
+    opacity: 0.8;
+  }
+
+  /* Tag size tiers for visual hierarchy */
+  .tag-chip-md {
+    font-size: 0.9375rem;
+    padding: 0.5625rem 1rem;
+    font-weight: 500;
+  }
+
+  .tag-chip-lg {
+    font-size: 1rem;
+    padding: 0.625rem 1.125rem;
+    font-weight: 600;
+  }
+
+  .tag-chip-xl {
+    font-size: 1.125rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 700;
+  }
+
+  .tag-chip-md .tag-count {
+    font-size: 0.875rem;
+  }
+
+  .tag-chip-lg .tag-count {
+    font-size: 0.9375rem;
+  }
+
+  .tag-chip-xl .tag-count {
+    font-size: 1rem;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 0.75rem;
+  }
+
+  .empty-text {
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .empty-prompt {
+    color: var(--color-accent-green);
+  }
+
+</style>
