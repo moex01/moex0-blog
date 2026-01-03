@@ -1,0 +1,110 @@
+---
+/**
+ * AsciiDivider Component
+ * Decorative ASCII art dividers for article sections
+ * Cyber-themed patterns
+ */
+
+interface Props {
+  variant?: 'simple' | 'double' | 'blocks' | 'box' | 'dots' | 'arrows' | 'cyber';
+  color?: 'cyan' | 'green' | 'purple' | 'muted';
+  width?: 'full' | 'wide' | 'medium';
+  spacing?: 'sm' | 'md' | 'lg';
+}
+
+const {
+  variant = 'simple',
+  color = 'cyan',
+  width = 'full',
+  spacing = 'md'
+} = Astro.props;
+
+const patterns = {
+  simple: '═══════════════════════════════════════════════════════════════',
+  double: '╔══════════════════════════════════════════════════════════════╗',
+  blocks: '▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓',
+  box: '╭──────────────────────────────────────────────────────────────╮',
+  dots: '· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·',
+  arrows: '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+  cyber: '━━━━━▶ ◀━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━▶ ◀━━━━━'
+};
+
+const colorClasses = {
+  cyan: 'text-[--color-accent-cyan]',
+  green: 'text-[--color-accent-green]',
+  purple: 'text-[--color-accent-purple]',
+  muted: 'text-[--color-text-muted]'
+};
+
+const widthClasses = {
+  full: 'w-full',
+  wide: 'max-w-4xl mx-auto',
+  medium: 'max-w-2xl mx-auto'
+};
+
+const spacingClasses = {
+  sm: 'my-4',
+  md: 'my-8',
+  lg: 'my-12'
+};
+---
+
+<div
+  class={`ascii-divider ${widthClasses[width]} ${spacingClasses[spacing]}`}
+  role="separator"
+  aria-hidden="true"
+>
+  <pre class={`ascii-art ${colorClasses[color]}`}>{patterns[variant]}</pre>
+</div>
+
+<style>
+  .ascii-divider {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ascii-divider::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ascii-art {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    white-space: pre;
+    text-align: center;
+  }
+
+  .ascii-divider:hover .ascii-art {
+    opacity: 0.9;
+  }
+
+  /* Mobile responsive - scale down */
+  @media (max-width: 640px) {
+    .ascii-art {
+      font-size: 0.625rem;
+      transform: scale(0.9);
+    }
+  }
+
+  /* Subtle glow effect */
+  .ascii-art.text-\[--color-accent-cyan\] {
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+  }
+
+  .ascii-art.text-\[--color-accent-green\] {
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.2);
+  }
+
+  .ascii-art.text-\[--color-accent-purple\] {
+    text-shadow: 0 0 8px rgba(167, 139, 250, 0.2);
+  }
+</style>

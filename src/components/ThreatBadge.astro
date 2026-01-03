@@ -1,0 +1,98 @@
+---
+/**
+ * ThreatBadge Component
+ * Displays threat level severity badges for articles
+ * Supports: Critical, High, Medium, Low, Info
+ */
+import { getThreatLevelFromCategory, getThreatBadge, type ThreatLevel } from '../utils/categoryColors';
+
+interface Props {
+  category?: string;
+  level?: ThreatLevel; // Override automatic detection
+  showIcon?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const { category, level, showIcon = true, size = 'md' } = Astro.props;
+
+// Determine threat level
+const threatLevel = level || getThreatLevelFromCategory(category);
+const badge = getThreatBadge(threatLevel);
+
+// Size classes
+const sizeClasses = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-1 text-xs',
+  lg: 'px-3 py-1.5 text-sm'
+};
+---
+
+<div
+  class={`threat-badge threat-badge-${threatLevel} ${sizeClasses[size]}`}
+  style={`
+    color: ${badge.color};
+    background: ${badge.bgColor};
+    border-color: ${badge.borderColor};
+  `}
+  title={`Threat Level: ${badge.label}`}
+  role="status"
+  aria-label={`Threat level: ${badge.label}`}
+>
+  {showIcon && <span class="threat-badge-icon">{badge.icon}</span>}
+  <span class="threat-badge-label">{badge.label}</span>
+</div>
+
+<style>
+  .threat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    border: 1px solid;
+    border-radius: 0.25rem;
+    letter-spacing: 0.025em;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .threat-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .threat-badge-icon {
+    font-size: 0.875em;
+    line-height: 1;
+  }
+
+  .threat-badge-label {
+    line-height: 1;
+  }
+
+  /* Pulse animation for critical threats */
+  .threat-badge-critical {
+    animation: pulse-critical 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-critical {
+    0%, 100% {
+      box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+    }
+  }
+
+  /* Subtle glow for high threats */
+  .threat-badge-high:hover {
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 640px) {
+    .threat-badge-icon {
+      font-size: 0.75em;
+    }
+  }
+</style>
