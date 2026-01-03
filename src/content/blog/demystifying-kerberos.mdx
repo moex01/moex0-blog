@@ -1,0 +1,574 @@
+---
+title: "Demystifying Kerberos"
+description: "A comprehensive guide to understanding Windows Kerberos authentication, covering the protocol's components, ticket-based authentication flow, encryption keys, and security mechanisms including pre-authentication."
+pubDate: 2024-03-10
+tags: ["kerberos", "authentication", "active-directory", "windows", "security"]
+image: "/images/kerberos/cerberus-banner.png"
+---
+
+import { Image } from 'astro:assets';
+import fig01 from '../../assets/images/kerberos/fig01-pass-the-hash.png';
+import fig02 from '../../assets/images/kerberos/fig02-cerberus.png';
+import fig03 from '../../assets/images/kerberos/fig03-kdc.png';
+import fig04 from '../../assets/images/kerberos/fig04-kdc-database.png';
+import fig05 from '../../assets/images/kerberos/fig05-as.png';
+import fig06 from '../../assets/images/kerberos/fig06-tgs.png';
+import fig07 from '../../assets/images/kerberos/fig07-ticket.png';
+import fig08 from '../../assets/images/kerberos/fig08-ticket-info.png';
+import fig09 from '../../assets/images/kerberos/fig09-krbtgt.png';
+import fig10 from '../../assets/images/kerberos/fig10-longterm-keys.png';
+import fig11 from '../../assets/images/kerberos/fig11-user-key-gen.png';
+import fig12 from '../../assets/images/kerberos/fig12-krbtgt-key-gen.png';
+import fig13 from '../../assets/images/kerberos/fig13-authenticator.png';
+import fig14 from '../../assets/images/kerberos/fig14-replay-cache.png';
+import fig15 from '../../assets/images/kerberos/fig15-credential-cache.png';
+import fig16 from '../../assets/images/kerberos/fig16-kerberos-overview.png';
+import fig17 from '../../assets/images/kerberos/fig17-as-req.png';
+import fig18 from '../../assets/images/kerberos/fig18-as-check.png';
+import fig19 from '../../assets/images/kerberos/fig19-sk-tgs.png';
+import fig20 from '../../assets/images/kerberos/fig20-tgt.png';
+import fig21 from '../../assets/images/kerberos/fig21-as-rep.png';
+import fig22 from '../../assets/images/kerberos/fig22-client-as-rep.png';
+import fig23 from '../../assets/images/kerberos/fig23-authenticator-tgs.png';
+import fig24 from '../../assets/images/kerberos/fig24-tgs-req.png';
+import fig25 from '../../assets/images/kerberos/fig25-tgs-check.png';
+import fig26 from '../../assets/images/kerberos/fig26-tgs-receive.png';
+import fig27 from '../../assets/images/kerberos/fig27-sk-service.png';
+import fig28 from '../../assets/images/kerberos/fig28-service-ticket.png';
+import fig29 from '../../assets/images/kerberos/fig29-tgs-rep.png';
+import fig30 from '../../assets/images/kerberos/fig30-credential-cache2.png';
+import fig31 from '../../assets/images/kerberos/fig31-user-auth.png';
+import fig32 from '../../assets/images/kerberos/fig32-ap-req.png';
+import fig33 from '../../assets/images/kerberos/fig33-ap-verify.png';
+import fig34 from '../../assets/images/kerberos/fig34-preauth-disabled.png';
+import fig35 from '../../assets/images/kerberos/fig35-preauth-enabled.png';
+
+In this article, I'll discuss the Windows Kerberos authentication process in a detailed manner. I often found some concepts not accurately documented while reviewing this topic, so I decided to write this article demystifying Kerberos authentication in a clear and precise way.
+
+## 1. Why Kerberos?
+
+<figure>
+  <Image src={fig01} alt="Figure 1: Pass-the-Hash (PtH)" loading="lazy" />
+  <figcaption>Figure 1: Pass-the-Hash (PtH)</figcaption>
+</figure>
+
+In a Windows Active Directory environment, when a client wants to access a specific application (or service) over the network, the client authenticates with the domain controller, which acts as the centralized authentication management server.
+
+Before Kerberos, when authenticating over an untrusted network, sending passwords in plaintext or transmitting password hashes (like LM/NTLM) is insecure, as they can be intercepted (either stealing the plaintext password, or the LM/NTLM hash) and used for unauthorized access.
+
+And if sending the hash over the network logs you in, it means that anyone who has the hash can log in the same as you, this is called **hash spoofing** or **Pass-the-Hash (PtH)**.
+
+## 2. What is Kerberos?
+
+<figure>
+  <Image src={fig02} alt="Cerberus - the three-headed dog" loading="lazy" />
+  <figcaption>Cerberus - the three-headed dog</figcaption>
+</figure>
+
+Kerberos is considered to be the most secure form of **authentication exchange** in the Windows environment, but the way it's facilitated with the use of tickets is its own idea of **authentication**.
+
+It's designed to provide reliable authentication over open and insecure networks, where communications may be intercepted. This can help protect your authentication process in transit, even if sniffed and observed off the network.
+
+Kerberos addresses the weaknesses of other authentication methods by providing end-to-end protection using ticket-based authentication, mutual authentication between the client and server, and strong cryptography.
+
+## 3. Main Aims of Kerberos
+
+We need to understand some of the aims that the protocol wishes to achieve before getting into details about the Kerberos authentication system. Some of the aims are:
+
+- The user's password must never travel over the network.
+- The user's password must never be stored in any form on the client machine, and it must be immediately discarded after being used.
+- The user's password should never be stored in an unencrypted form, even in the authentication server (or KDC) database (refer to [section 4.1](#41-key-distribution-center-kdc)).
+- Achieving **Single Sign-On** (SSO), where the user is prompted to enter a password only once per work session, allowing the user to access all the services he/she is allowed to access, without having to re-enter the password during this session.
+
+## 4. Kerberos Components & Terms
+
+Before getting into the details of the Kerberos authentication process, we need to understand core components and terms, which will be used later when discussing more details about it.
+
+### 4.1 Key Distribution Center (KDC)
+
+<figure>
+  <Image src={fig03} alt="Figure 2: Key Distribution Center (KDC)" loading="lazy" />
+  <figcaption>Figure 2: Key Distribution Center (KDC)</figcaption>
+</figure>
+
+The authentication server in a Kerberos environment is called KDC. Since it resides entirely on a single physical server, it can be logically considered divided into three parts:
+
+- Database
+- Authentication Server (AS)
+- Ticket Granting Server (TGS)
+
+#### 4.1.1 Database
+
+<figure>
+  <Image src={fig04} alt="Figure 3: Example on a KDC Database" loading="lazy" />
+  <figcaption>Figure 3: Example on a KDC Database</figcaption>
+</figure>
+
+It's a container for entries associated with users and services. As an abstract, each entry contains a principal (which can be either a client or a service) and the corresponding long-term secret key (described in [section 4.4](#44-keys)).
+
+The Authentication Server (AS) and Ticket Granting Server (TGS) verify the principals (entries) and the secret keys by checking them in the KDC database during the authentication process.
+
+> **Warning:** The AS and TGS do not actually contain this information included in Figure 3. This information is included in the KDC database, and the AS and TGS only check it by accessing the KDC database and checking the information needed to be verified. It's just visualized like that for simplicity and clearer understanding.
+
+#### 4.1.2 Authentication Server (AS)
+
+<figure>
+  <Image src={fig05} alt="Figure 4: Authentication Server (AS)" loading="lazy" />
+  <figcaption>Figure 4: Authentication Server (AS)</figcaption>
+</figure>
+
+The Authentication Server (AS) is the part of KDC that replies to the initial authentication request from the client. In response to the initial authentication request, the AS issues a special known ticket which is known as Ticket Granting Ticket (TGT).
+
+If users are actually who they say they are, they can use the TGT to request other service tickets (which the user wants to access) from TGS, without having to re-enter passwords. This achieves the concept of **Single Sign-On (SSO)**.
+
+#### 4.1.3 Ticket Granting Server (TGS)
+
+<figure>
+  <Image src={fig06} alt="Figure 5: Ticket Granting Server (TGS)" loading="lazy" />
+  <figcaption>Figure 5: Ticket Granting Server (TGS)</figcaption>
+</figure>
+
+The Ticket Granting Server (TGS) is the KDC component that distributes the service tickets to clients with valid TGT, guaranteeing the authenticity of the identity that requests access to resources on the application servers.
+
+It can be considered as an application server that provides the issuing of service tickets as a service (TaaS).
+
+### 4.2 Tickets
+
+<figure>
+  <Image src={fig07} alt="Figure 6: Ticket" loading="lazy" />
+  <figcaption>Figure 6: Ticket</figcaption>
+</figure>
+
+A **ticket** is something a client presents to an application server (either the KDC or a service) to demonstrate the authenticity of its identity. Tickets are issued by the KDC (AS and TGS), and are encrypted using a secret key of the service they're intended for.
+
+Since the shared secret is only shared between the KDC and the server providing the service, not even the client can know or change the contents of the ticket.
+
+> **Info:** Keep in mind, a **principal** usually refers to the username of that specific client or service. For example:
+>
+> **Client**
+> - Default Format — `Name[/Instance]@REALM`
+>   - User — `moex0@EXAMPLE.COM`
+>   - Admin — `moex0/admin@EXAMPLE.COM`
+>     - Where `moex0` is the username, and `admin` is the instance to differentiate between a normal user and an admin.
+>
+> **Service**
+> - Default Format — `Service/Hostname@REALM`
+>   - FTP Service — `ftp/server.example.com@EXAMPLE.COM`
+>     - Where `ftp` is the service name, and `server.example.com` is the FQDN (Fully Qualified Domain Name) of the machine providing the requested service.
+
+The main information contained in a ticket includes:
+
+<figure>
+  <Image src={fig08} alt="Figure 7: Example on information included in the ticket" loading="lazy" />
+  <figcaption>Figure 7: Example on information included in the ticket</figcaption>
+</figure>
+
+- **Principal_Client**: The requesting user's principal
+- **Principal_Service**: The principal of the service the request it is intended for
+- The IP address of the client machine from which the ticket can be used, included in the **IP_list**.
+- **Timestamp**: The date and time (in timestamp format).
+- **Lifetime**: The ticket's maximum lifetime.
+- **SK_Service**: The session key (this has a fundamental role in authentication, described in [section 4.4](#44-keys)).
+
+#### The Why of Tickets' Lifetime
+
+Each ticket has a lifetime, which is by default 10 hours (600 minutes). This is essential since the authentication server no longer has control over any issued ticket. Even though the realm admin can prevent the issuing of new tickets for a certain user at any time, it cannot prevent users from using the tickets they already posses. This is the reason for limiting the lifetime of the tickets in order to limit any abuse over time.
+
+### 4.3 KRBTGT Service Account
+
+KRBTGT is a default account that exists in all domains of an Active Directory. Its purpose is to act as a KDC service account (acting as the authentication service for a given domain) for domain controllers.
+
+A key derived from the KRBTGT account's password **K_TGS** (refer to [section 4.5](#45-encryption-key) for KRBTGT service account secret key generation) is used to encrypt the Ticket Granting Ticket (TGS) before being sent to the client, in order to protect it from tampering.
+
+> **Danger:** The password of the KRBTGT account should be strong and highly protected because if compromised by an adversary, they would be able to forge arbitrary TGTs, known as **Golden Tickets**.
+
+<figure>
+  <Image src={fig09} alt="Figure 8: KRBTGT Service Account Disabled By Default" loading="lazy" />
+  <figcaption>Figure 8: KRBTGT Service Account Disabled By Default</figcaption>
+</figure>
+
+The KRBTGT account is disabled by default, as only its password is used to derive the encryption key, that will be used to encrypt the TGT. This adds a layer of protection to the account.
+
+> **Info:** The KRBTGT service has a unique principal, which differs from the users and services principals mentioned above.
+>
+> **KRBTGT** — `krbtgt/REALM@REALM`
+
+**Why is the hostname and realm for the KRBTGT service** `REALM@REALM`?
+
+Because the KRBTGT exists in the KDC, and as the TGT is issued from the AS and handed by the client to the TGS, this means that it goes from the KDC to the KDC (refer to [section 5](#5-how-kerberos-works)).
+
+### 4.4 Keys
+
+#### 4.4.1 Long-term Keys
+
+<figure>
+  <Image src={fig10} alt="Figure 9: Long-term Keys" loading="lazy" />
+  <figcaption>Figure 9: Long-term Keys</figcaption>
+</figure>
+
+**Users** and **services** share a secret with the KDC, which is stored in the KDC database.
+
+- For users, the secret is the key derived from their password (refer to [section 4.5](#45-encryption-key)).
+- For services, it's their secret key (set by the administrator).
+- KRBTGT service account secret key (refer to [section 4.3](#43-krbtgt-service-account)).
+
+These keys are called **long-term keys** (we'll call them secret keys), since they do not change when the work session changes.
+
+#### Maybe you're asking, why isn't the user's secret key stored on the client and only stored in the KDC database, unlike the service which has its secret key stored on its server and the KDC database?
+
+The user's secret key is not stored on the client in Kerberos because it is stored securely on the KDC. The KDC is responsible for managing and distributing the keys used for authentication and encryption in Kerberos. This ensures that the keys are not compromised if the client is compromised or if the client's storage is accessed by an unauthorized party.
+
+Meanwhile, for services, they do not need to type in a password because the secret key is already set by the administrator and shared between the KDC and the service pre-authentication (Pre-shared Key).
+
+#### 4.4.2 Session Keys
+
+It's also necessary that a user shares a secret with the service (KRBTGT and application servers), at least for the time in which the client has a work session open on a server. This key is generated by the KDC when a ticket is issued, and it's called a **Session Key**.
+
+Session keys are generated for:
+
+- **Securing Communications**: The session key is used to encrypt communications between the client and the server, ensuring that the data exchanged during the session is protected from eavesdropping and tampering by unauthorized parties.
+- **Authentication**: The session key is generated, encrypted with the client's secret key (long-term key), and sent back to the client, ensuring that only the legitimate user can decrypt and access the session key. This process helps authenticate the client to the server (discussed more in-depth in [section 5](#5-how-kerberos-works)).
+
+> **Info:** Session keys play a fundamental role in proving the authenticity of the user.
+
+### 4.5 Encryption Key
+
+As we mentioned in [section 3](#3-main-aims-of-kerberos), one of the aims of Kerberos protocol is to prevent the user's password from being stored in an unencrypted form, not even in the KDC database. Therefore, `string2key` function has been introduced.
+
+`string2key` is a one-way hash function, which means that it's irreversible. It transforms the unencrypted user's password into an encryption key, which will further be used for encrypting data. The encryption key cannot determine the password (unless by brute force), which adds a layer of security in case the encryption key gets compromised.
+
+> **Info:** The `string2key` function is called every time the user changes the password or enters it for authentication.
+
+#### 4.5.1 Salt
+
+In Kerberos 5, the concept of password salt has been introduced. A string (salt) is to be concatenated to the unencrypted password before applying the `string2key` function to obtain the encryption key. Kerberos 5 uses the same principal of the user principal as salt:
+
+<figure>
+  <Image src={fig11} alt="Figure 10: User's Secret Key Generation" loading="lazy" />
+  <figcaption>Figure 10: User's Secret Key Generation</figcaption>
+</figure>
+
+Where, **K_user** is the encryption key of the user, and **P_user** is the unencrypted password of the user.
+
+Adding salt also ensures that even if two different principals have the same unencrypted password, will still have different encryption keys.
+
+The KRBTGT service account secret key **K_TGS** undergoes the same process as the generation of the user's secret key, which will only be used to encrypt/decrypt the Ticket Granting Ticket (TGT).
+
+<figure>
+  <Image src={fig12} alt="Figure 11: KRBTGT Service Account Key Generation" loading="lazy" />
+  <figcaption>Figure 11: KRBTGT Service Account Key Generation</figcaption>
+</figure>
+
+### 4.6 Authenticator
+
+Even if the user principal **Principal_Client** is present in the ticket, it's not enough to guarantee the authenticity of the client (refer to the authentication process in [section 5](#5-how-kerberos-works)). **Why?**
+
+An attacker could capture the ticket when it's sent by a legitimate client, and send it illegitimately to obtain unauthorized access to the service. Even if we include the IP addresses of the machine in the ticket, it is known that in an open and insecure network, addresses can be easily spoofed.
+
+To solve this problem, we can take advantage of the fact that the client and the server have a session key (**SK_TGS** or **SK_Service**) in common that only they know (and also the KDC since it generated it, but it's trusted by default). Therefore, along with the request containing the ticket, the client adds another packet, called the **authenticator.**
+
+**The authenticator** includes the **Principal_Client** and **Timestamp**, and encrypts them with the session key. An example of the authenticator in case of client requests a service ticket from the TGS is shown below (refer to [section 5.3](#53-tgs_req)):
+
+```
+Authenticator = {Principal_Client, Timestamp}SK_TGS
+```
+
+<figure>
+  <Image src={fig13} alt="Figure 12: Authenticator encrypted with the TGS session key" loading="lazy" />
+  <figcaption>Figure 12: Authenticator encrypted with the TGS session key</figcaption>
+</figure>
+
+The server which offers the service will decrypt the ticket upon receiving the request, and extract the session key. If the server is actually who he/she says, the server will be able to decrypt the authenticator, using the extracted session key, and extracting the timestamp. If the timestamp differs from the server time by less than 2 minutes (tolerance can be configured), then the authentication is successful (refer to [section 5.4](#54-tgs_rep)). This shows the criticality of synchronization between machines belonging to the same realm.
+
+**What if there's a possibility that the attacker can steal both the ticket and the authenticator and use them during the 2 minutes of validity?** Here comes the concept of **Replay Cache.**
+
+### 4.7 Replay Cache
+
+<figure>
+  <Image src={fig14} alt="Figure 13: TGS Replay Cache" loading="lazy" />
+  <figcaption>Figure 13: TGS Replay Cache</figcaption>
+</figure>
+
+Although this is very difficult to happen that the attacker steal both, the ticket and the authenticator, it's not impossible. To solve this problem, **Replay cache** has been introduced in Kerberos 5.
+
+In application servers and also in TGS, there exists a capacity to remember the authenticators that have arrived within the last 2 minutes and reject them if they're replicas. Accordingly, the attacker wouldn't be able to replay the request. Even if the attacker reached the server before the original user, the user access to the server would be denied, and this would indicate a breach.
+
+### 4.8 Credential Cache
+
+<figure>
+  <Image src={fig15} alt="Figure 14: User Credential Cache For Achieving SSO With KDC" loading="lazy" />
+  <figcaption>Figure 14: User Credential Cache For Achieving SSO With KDC</figcaption>
+</figure>
+
+The client never keeps the user's password **P_User**, nor does it memorize the secret key **K_User** obtained by applying `string2key`. They are used to decrypt the replies from KDC and are immediately discarded.
+
+However, to implement the Single Sign-On (SSO) characteristic, where the user is asked to enter the password just once per work session, it is necessary to memorize the ticket (**TGT**) and the related session (**SK_TGS**) key. The place where this data is stored is called the **Credential Cache**.
+
+## 5. How Kerberos Works
+
+To streamline the explanation of the authentication process, we'll give a simple abstract example of how Kerberos works, then we'll get into more details later on.
+
+Let's assume Bob decided to visit an amusement park. He went to the ticket booth (**TGS**) at the front door (**KDC**), and bought an admission ticket (**TGT**), which will give him access to the front door (**KDC**) only for that day (or a limited timestamp). Bob went past the front door into the park and found an amazing ride called the "file server ride" (the service).
+
+Bob reached out to the person at the ride's gate (the service) and asked him if he could try the file server ride and showed him the admission ticket (**TGT**), the person told him that he needed another ticket (**T_Service**) specifically for the file server ride in order to have to access it.
+
+Bob went back to the ticket booth (**TGS**) and asked the person at the ticket booth to give him a file server ride ticket (**T_Service**). The person asked to show him the ticket from the front gate (the admission ticket **TGT**) before he could give him the file server ride ticket (**T_Service**). Bob shows him the admission ticket (**TGT**) and puts it back into his pocket. The person at the ticket booth asked him some other questions to verify that the admission ticket belonged to him and that he didn't steal it (**Authenticator**). After verification, the person at the ticket booth (**TGS**) then gives Bob the file server ride ticket (**T_Service**). This means that Bob can request any ride he wants to access using this admission ticket (**TGT**), as long as it's valid and didn't expire (**TGT** lifetime).
+
+Bob goes to the file server ride gate and shows the person the file server ride ticket (**T_Service**), granted access to the ride. Bob can access the file server ride as long as the ticket is valid and didn't expire (**T_Service** lifetime).
+
+> **Info:** This abstraction was an inspiration from [@BryanOnSecurity](https://twitter.com/BryanOnSecurity).
+
+To demonstrate the Kerberos authentication process, we'll assume that a specific user wants to access resources on a specific application server, let's say an FTP server, from a specific client.
+
+<figure>
+  <Image src={fig16} alt="Figure 15: Overview on Kerberos Authentication Process" loading="lazy" />
+  <figcaption>Figure 15: Overview on Kerberos Authentication Process</figcaption>
+</figure>
+
+### 5.1 AS_REQ
+
+The user sends an initial authentication request to the Authentication Server (AS), requesting a Ticket Granting Ticket (**TGT**). This request is not necessarily encrypted (discussed later in [section 6](#6-pre-authentication)).
+
+```
+AS_REQ = (Principal_Client, Principal_Service, IP_list, Lifetime)
+```
+
+<figure>
+  <Image src={fig17} alt="Figure 16: Client Requesting Initial Authentication From the Authentication Server (AS_REQ)" loading="lazy" />
+  <figcaption>Figure 16: Client Requesting Initial Authentication From the Authentication Server (AS_REQ)</figcaption>
+</figure>
+
+Where:
+
+- **Principal_Client**: The principal of the user requesting authentication (e.g. `moex0@EXAMPLE.COM`).
+- **Principal_Service**: The principal of the service the ticket is being asked for, which would generally be `krbtgt/REALM@REALM` in the initial authentication.
+- **IP_list**: The list of IP addresses that are allowed to use the ticket.
+- **Lifetime**: The maximum ticket validity time requested by the user.
+
+> **Info:** There's a special case where the **Principal_Service** isn't `krbtgt/REALM@REALM`. When the user wants to just use one service during a work session, they wouldn't need Single Sign-On and may ask Authentication Server (AS) directly for the service ticket, skipping the request to the TGS **TGS_REQ**.
+
+### 5.2 KRB_AS_REP
+
+<figure>
+  <Image src={fig18} alt="Figure 17: AS checking if the client and service principals exist in the KDC database" loading="lazy" />
+  <figcaption>Figure 17: AS checking if the client and service principals exist in the KDC database</figcaption>
+</figure>
+
+Upon receiving the previous request, the AS checks if the **Principal_Client** and **Principal_Service** exist in the KDC database. If they exist, AS will start creating the reply **AS_REP**, which consists of two parts:
+
+#### Session Key (SK_TGS)
+
+<figure>
+  <Image src={fig19} alt="Figure 18: Ticket Granting Server (TGS) session key" loading="lazy" />
+  <figcaption>Figure 18: Ticket Granting Server (TGS) session key</figcaption>
+</figure>
+
+The AS will randomly create a session key, let's say **SK_TGS**, which will be used for protecting subsequent communications between the client and the TGS.
+
+#### Ticket Granting Ticket (TGT)
+
+<figure>
+  <Image src={fig20} alt="Figure 19: Ticket Granting Ticket (TGT)" loading="lazy" />
+  <figcaption>Figure 19: Ticket Granting Ticket (TGT)</figcaption>
+</figure>
+
+The AS will issue a TGT which will include: **Principal_Client** and **Principal_Service** (which's still `krbtgt/REALM@REALM`, as the user will subsequently communicate with TGS), IP list, data and time in timestamp format, ticket's lifetime, TGS session key **SK_TGS**.
+
+```
+TGT = (Principal_Client, Principal_Service, IP_list, Timestamp, Lifetime, SK_TGS)
+```
+
+The **AS_REP** is then generated containing the TGT, encrypted using the KRBTGT service account secret **K_TGS** (discussed in [section 4.5](#45-encryption-key)), sent with the session key and some other information, encrypted with the user's secret **K_User**, as described in the equation below:
+
+```
+AS_REP = {Principal_Service, Timestamp, Lifetime, SK_TGS}K_User, {TGT}K_TGS
+```
+
+<figure>
+  <Image src={fig21} alt="Figure 20: Authentication Server Reply (AS_REP)" loading="lazy" />
+  <figcaption>Figure 20: Authentication Server Reply (AS_REP)</figcaption>
+</figure>
+
+#### What happens when the client receives the AS_REP?
+
+<figure>
+  <Image src={fig22} alt="Figure 21: Client Receiving The AS_REP" loading="lazy" />
+  <figcaption>Figure 21: Client Receiving The AS_REP</figcaption>
+</figure>
+
+At this point, when the client receives **AS_REP**, it'll ask the user to enter the password. As described in [section 4.5](#45-encryption-key), the salt is concatenated with the password and passed to `string2key` function, resulting in **K_User**, which will be used to decrypt the part of the message that was encrypted by the KDC using the **K_User** stored in the KDC database. If it's decrypted successfully, this indicates that the user is really who he/she says.
+
+In order to achieve Single Sign-On, the client will then extract the session key **SK_TGS** from the decrypted part of the reply, and store it and the TGT in the **user's credential cache** (refer to [section 4.8](#48-credential-cache)).
+
+**Why information already included in the TGT is sent again for the user in the session key part of the reply?**
+
+As we want to protect the information inside the TGT from tampering, the TGT is encrypted using the KRBTGT service account secret **SK_TGS**. If the TGT were to be encrypted using the user's secret **K_User**, the user would be able to see what's inside the TGT and could tamper with the information included (such as setting the lifetime to 10 years). Similarly, if the client was compromised, the adversary would be able to tamper with the information inside the TGT and use it to gain unauthorized access. That's why, another part of the reply (session key part) is encrypted and sent to the user to protect the TGT, as well as provide the user's authenticity using the session key **SK_TGS** and the **Timestamp**.
+
+> **Info:** It's important to note that the application server never communicates directly with the KDC. It only receives the Service Ticket **T_Service** through the client wishing to access it.
+
+### 5.3 TGS_REQ
+
+At this point, the user authenticated with the AS, but still doesn't have the ticket to access the requested service. The user sends a request **TGS_REQ** to the Ticket Granting Server (TGS) by:
+
+- Creating an authenticator (refer to [section 4.6](#46-authenticator)) with the **Principal_Client**, **Timestamp**, and encrypt them both using **SK_TGS**:
+
+```
+Authenticator = {Principal_Client, Timestamp}SK_TGS
+```
+
+<figure>
+  <Image src={fig23} alt="Figure 22: Authenticator encrypted with TGS session key" loading="lazy" />
+  <figcaption>Figure 22: Authenticator encrypted with TGS session key</figcaption>
+</figure>
+
+- Creating a request packet **TGS_REQ** containing the **Principal_Service** of the service the ticket is needed for, **Lifetime**, the **Authenticator** just created, and the **TGT** (which's already encrypted using **K_TGS**):
+
+```
+TGS_REQ = (Principal_Service, Lifetime, Authenticator), {TGT}K_TGS
+```
+
+<figure>
+  <Image src={fig24} alt="Figure 23: Client sending a request to TGS to obtain a service ticket (TGS_REQ)" loading="lazy" />
+  <figcaption>Figure 23: Client sending a request to TGS to obtain a service ticket (TGS_REQ)</figcaption>
+</figure>
+
+### 5.4 TGS_REP
+
+<figure>
+  <Image src={fig25} alt="Figure 24: TGS checking if the service principal exists in the database" loading="lazy" />
+  <figcaption>Figure 24: TGS checking if the service principal exists in the database</figcaption>
+</figure>
+
+When the TGS receives the request **TGS_REQ**, it first verifies that **Principal_Service** exists in the KDC database. If it exists, it decrypts the TGT using the KRBTGT secret key **K_TGS**, and extracts the session key **SK_TGS**, which is subsequently used to decrypt the authenticator in order to verify the user. Before issuing the requested service ticket **T_Service**, the following conditions have to be checked and verified:
+
+<figure>
+  <Image src={fig26} alt="Figure 25: TGS receives the client request for the service ticket" loading="lazy" />
+  <figcaption>Figure 25: TGS receives the client request for the service ticket</figcaption>
+</figure>
+
+- The TGT has not expired.
+- The **Principal_Client** which exists in the authenticator matches the one present in the TGT.
+- The **Authenticator** is not already present in the replay cache and has not expired.
+- If the **IP_list** is not null, it checks that the source IP of the request packet is one of those contained in the list.
+
+These conditions are being checked to prove that the TGT really belongs to the user who made the request. If verified, the TGS will start forging the reply:
+
+#### Session Key (SK_Service)
+
+<figure>
+  <Image src={fig27} alt="Figure 26: Service Session Key" loading="lazy" />
+  <figcaption>Figure 26: Service Session Key</figcaption>
+</figure>
+
+Randomly creates a session key **SK_Service**, which will be used for encrypting subsequent communications between client and service.
+
+#### Service Ticket (T_Service)
+
+<figure>
+  <Image src={fig28} alt="Figure 27: Service Ticket" loading="lazy" />
+  <figcaption>Figure 27: Service Ticket</figcaption>
+</figure>
+
+Creates a service ticket **T_Service**, with mostly similar information to that included in the TGT. What's different is the service principal **Principal_Service**, which will be the requested service principal, and the session key included **SK_Service**, which will be the service session key.
+
+It then sends the reply message **TGS_REP** containing the requested service ticket **T_Service** encrypted with the service secret key **K_Service**, along with the other part of the reply message which includes the session key **SK_Service** and other information all encrypted with the TGS session key **SK_TGS**:
+
+```
+T_Service = (Principal_Client, Principal_Service, IP_list, Timestamp, Lifetime, SK_Service)
+```
+
+```
+TGS_REP = {Principal_Service, Timestamp, Lifetime, SK_Service}SK_TGS, {T_Service}K_Service
+```
+
+<figure>
+  <Image src={fig29} alt="Figure 28: Client receiving the TGS reply (TGS_REP) which includes the service ticket and session key" loading="lazy" />
+  <figcaption>Figure 28: Client receiving the TGS reply (TGS_REP) which includes the service ticket and session key</figcaption>
+</figure>
+
+At this point, when the client receives the **TGS_REP**, it'll decrypt the session key part using **SK_TGS**, and extract the new service session key **SK_Service**. It'll then cache both the service ticket **T_Service** and the service session key **SK_Service** in the credential cache. This will achieve SSO with the requested service, as long as the ticket didn't expire.
+
+<figure>
+  <Image src={fig30} alt="Figure 29: Client extracting session key and saving it and the service ticket in credential cache" loading="lazy" />
+  <figcaption>Figure 29: Client extracting session key and saving it and the service ticket in credential cache</figcaption>
+</figure>
+
+### 5.5 AP_REQ
+
+As the client now has the service ticket **T_Service** and the service session key **SK_Service**, it can now ask the service for access to whatever resources it needs via a **AP_REQ** message. **AP_REQ** uses a similar strategy to the one used in the **TGS_REQ** (refer to [section 5.3](#53-tgs_req)):
+
+- Creates an authenticator (refer to [section 4.6](#46-authenticator)) with the **Principal_Client**, **Timestamp**, both encrypted using service session key **SK_Service**:
+
+```
+Authenticator = {Principal_Client, Timestamp}SK_Service
+```
+
+<figure>
+  <Image src={fig31} alt="Figure 30: User Authenticator" loading="lazy" />
+  <figcaption>Figure 30: User Authenticator</figcaption>
+</figure>
+
+- Creates a request packet **AP_REQ** containing the **Authenticator** just created, and the service ticket **T_Service** (which's already encrypted using **K_Service**):
+
+```
+AP_REQ = Authenticator, {T_Service}K_Service
+```
+
+<figure>
+  <Image src={fig32} alt="Figure 31: Client sending a request for the service to access resources (AP_REQ)" loading="lazy" />
+  <figcaption>Figure 31: Client sending a request for the service to access resources (AP_REQ)</figcaption>
+</figure>
+
+When the application server receives the request **AP_REQ**, it decrypts the ticket **T_Service** using the requested service secret key **K_Service**, and extracts the service session key **SK_Service**, which is subsequently used to decrypt the **Authenticator** to prove the user's authenticity.
+
+<figure>
+  <Image src={fig33} alt="Figure 32: Application server receiving AP_REQ and verifying the request issuer" loading="lazy" />
+  <figcaption>Figure 32: Application server receiving AP_REQ and verifying the request issuer</figcaption>
+</figure>
+
+Before granting access to the user, the conditions (similarly mentioned in [section 5.3](#53-tgs_req)) should be positive to verify the user's authenticity:
+
+- The service ticket **T_Service** has not expired.
+- The **Principal_Client** which exists in the authenticator matches the one present in the ticket.
+- The **Authenticator** is not already present in the replay cache and has not expired.
+- If the **IP_list** is not null, it checks that the source IP of the request packet **AP_REQ** is one of those contained in the list.
+
+> **Info:** It's not surprising that the previous strategy is very similar to the one used in the TGS to check the authenticity of the user, as the TGS can be considered as an application server whose service is to provide tickets to users (as mentioned in [section 4.1.3](#413-ticket-granting-server-tgs)).
+
+## 6. Pre-Authentication
+
+Since Kerberos doesn't require the AS to authenticate the user before sending the TGT (only checks if the client and server principals exist in the KDC database), a client doesn't provide its password or any method to provide authenticity. Therefore, the AS cannot validate the client's identity and doesn't provide any assurance of the identity. Accordingly, an attacker can send legitimate client/server principals (impersonate a user), requesting a TGT.
+
+### 6.1 Pre-authentication Disabled
+
+<figure>
+  <Image src={fig34} alt="Figure 33: Attacker requesting a TGT from the Authentication Server (AS_REQ)" loading="lazy" />
+  <figcaption>Figure 33: Attacker requesting a TGT from the Authentication Server (AS_REQ)</figcaption>
+</figure>
+
+The attacker would request a TGT, and the TGT will be issued (after verifying the client and service principals), encrypted with the KRBTGT secret key **K_TGS**, and sent as a reply (refer to [section 5.2](#52-krb_as_rep)) to the attacker requesting it. The attacker would then perform an offline brute-force or dictionary attack on the TGT. This process wouldn't appear in the KDC logs except only as a single request for TGT. After successfully decrypting the TGT, the attacker now has the **K_TGS**, which he can use to decrypt any TGT.
+
+The attacker then would simply request another TGT, to have a valid timestamp and lifetime, and decrypt it with the secret key he obtained. This would give him the ability to tamper with the information included in the TGT and gain unauthorized access.
+
+### 6.2 Pre-authentication Enabled
+
+<figure>
+  <Image src={fig35} alt="Figure 34: Client's pre-authentication data validated before issuing a TGT" loading="lazy" />
+  <figcaption>Figure 34: Client's pre-authentication data validated before issuing a TGT</figcaption>
+</figure>
+
+With pre-authentication enabled, the AS will request the user to send a **Timestamp**, encrypted with the user's secret **K_User** as the encryption key. If the AS reads a valid timestamp by decrypting it with the user's secret key (which's available in the KDC database), the AS knows that this request isn't a replay of a previous request and that it's included within the timestamp tolerance period. This ensures that the attacker cannot directly ask the KDCs for the encrypted tickets to brute force offline.
+
+In order for the attacker to have a TGT, the attacker has to encrypt a timestamp with a password and offer it to the KDC to request the TGT. This process would be repeated over and over while trying to brute-force the pre-authentication packet. However, the KDC log will record the entry every time the pre-authentication fails.
+
+> **Danger:** Keep in mind that **pre-authentication** doesn't prevent the attacker from sniffing the client's encrypted timestamp message to the KDC, which if sniffed, the attacker can brute force it offline. Pre-authentication just adds an extra layer of security, where the attacker cannot request a ticket without authentication, which makes the attacker's attempts more visible and easier to detect.
+
+> **Info:** To add one more layer of security, it's recommended to use lengthy passwords and have a good password rotation policy in the domain in order to make offline brute-forcing ineffective.
+
+## References
+
+- [RFC 4120 - The Kerberos Network Authentication Service (V5)](https://datatracker.ietf.org/doc/html/rfc4120#page-29)
+- [Kerberos Tutorial](https://kerberos.org/software/tutorial.html)
+- [Kerberos authentication overview - Microsoft](https://learn.microsoft.com/en-us/windows-server/security/kerberos/kerberos-authentication-overview)
+- [Kerberos Security Analysis - ACSAC 2007](https://www.acsac.org/2007/papers/30.pdf)
+- [Kerberos Pre-Authentication: Why It Should Not Be Disabled](https://learn.microsoft.com/en-us/archive/technet-wiki/23559.kerberos-pre-authentication-why-it-should-not-be-disabled)
