@@ -1,0 +1,36 @@
+---
+// Site configuration
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://moex01.github.io/moex0-blog';
+
+// WebSite schema for the homepage
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "moex0",
+  "description": "Cybersecurity articles, threat intelligence, and security research by moex0",
+  "url": siteUrl,
+  "author": {
+    "@type": "Person",
+    "name": "moex0",
+    "url": `${siteUrl}/about`,
+    "sameAs": [
+      "https://github.com/moex01",
+      "https://x.com/moex0",
+      "https://linkedin.com/in/moex0"
+    ]
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": `${siteUrl}/?search={search_term_string}`
+    },
+    "query-input": "required name=search_term_string"
+  }
+};
+
+// Safely serialize to JSON
+const jsonLd = JSON.stringify(webSiteSchema);
+---
+
+<script type="application/ld+json" set:html={jsonLd} />

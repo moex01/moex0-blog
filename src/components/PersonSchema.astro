@@ -1,0 +1,38 @@
+---
+// Site configuration
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://moex01.github.io/moex0-blog';
+
+// Person schema for the About page
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "moex0",
+  "url": `${siteUrl}/about`,
+  "description": "Cybersecurity researcher and threat intelligence analyst specializing in APT research, malware analysis, vulnerability research, and red team operations.",
+  "jobTitle": "Cybersecurity Researcher",
+  "sameAs": [
+    "https://github.com/moex01",
+    "https://x.com/moex0",
+    "https://linkedin.com/in/moex0"
+  ],
+  "knowsAbout": [
+    "Threat Intelligence",
+    "APT Research",
+    "Malware Analysis",
+    "Reverse Engineering",
+    "Vulnerability Research",
+    "Incident Response",
+    "Digital Forensics",
+    "Red Team Operations"
+  ],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": `${siteUrl}/about`
+  }
+};
+
+// Safely serialize to JSON
+const jsonLd = JSON.stringify(personSchema);
+---
+
+<script type="application/ld+json" set:html={jsonLd} />

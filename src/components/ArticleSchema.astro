@@ -1,0 +1,65 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  image?: string;
+  tags?: string[];
+  slug: string;
+}
+
+const { title, description, pubDate, updatedDate, image, tags = [], slug } = Astro.props;
+
+// Site configuration
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://moex01.github.io/moex0-blog';
+const articleUrl = `${siteUrl}/blog/${slug}`;
+const imageUrl = image ? new URL(image, siteUrl).toString() : `${siteUrl}/og/${slug}.png`;
+
+// Author information
+const author = {
+  "@type": "Person",
+  "name": "moex0",
+  "url": `${siteUrl}/about`,
+  "sameAs": [
+    "https://github.com/moex01",
+    "https://x.com/moex0",
+    "https://linkedin.com/in/moex0"
+  ]
+};
+
+// Publisher information
+const publisher = {
+  "@type": "Organization",
+  "name": "moex0",
+  "url": siteUrl,
+  "logo": {
+    "@type": "ImageObject",
+    "url": `${siteUrl}/favicon.svg`
+  }
+};
+
+// Build the Article schema
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "image": imageUrl,
+  "datePublished": pubDate.toISOString(),
+  "dateModified": (updatedDate || pubDate).toISOString(),
+  "author": author,
+  "publisher": publisher,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": articleUrl
+  },
+  "url": articleUrl,
+  ...(tags.length > 0 && { "keywords": tags.join(", ") })
+};
+
+// Safely serialize to JSON
+const jsonLd = JSON.stringify(articleSchema);
+---
+
+<script type="application/ld+json" set:html={jsonLd} />
