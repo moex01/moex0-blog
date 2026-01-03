@@ -1,0 +1,33 @@
+---
+// Buttondown Newsletter Signup
+// Update the form action with your Buttondown username
+const buttondownUsername = 'moex0'; // Change this to your Buttondown username
+---
+
+<div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+  <p class="text-[--color-text-secondary] text-sm">
+    <span class="text-[--color-accent-green] font-mono">$</span> Get updates:
+  </p>
+
+  <form
+    action={`https://buttondown.com/api/emails/embed-subscribe/${buttondownUsername}`}
+    method="post"
+    target="popupwindow"
+    class="flex gap-2 flex-1 max-w-md"
+  >
+    <input
+      type="email"
+      name="email"
+      placeholder="you@example.com"
+      required
+      class="flex-1 px-3 py-1.5 bg-[--color-bg-primary] border border-[--color-border] rounded text-[--color-text-primary] placeholder:text-[--color-text-muted] focus:outline-none focus:border-[--color-accent-cyan] font-mono text-sm"
+    />
+    <button
+      type="submit"
+      class="px-4 py-1.5 bg-[--color-accent-green] text-black rounded font-mono font-semibold text-sm hover:opacity-90 transition-opacity"
+    >
+      Subscribe
+    </button>
+  </form>
+</div>
+

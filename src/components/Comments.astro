@@ -1,0 +1,85 @@
+---
+// Giscus Comments Component
+// Configure at: https://giscus.app/
+// You'll need to:
+// 1. Enable GitHub Discussions on your repo
+// 2. Install the Giscus app: https://github.com/apps/giscus
+// 3. Get your configuration from https://giscus.app/
+
+interface Props {
+  // These will be filled in after you configure Giscus
+  repo?: string;
+  repoId?: string;
+  category?: string;
+  categoryId?: string;
+}
+
+const {
+  repo = 'moex01/moex0-blog',
+  repoId = 'R_kgDOQyjOtw',
+  category = 'Announcements',
+  categoryId = 'DIC_kwDOQyjOt84C0fh4',
+} = Astro.props;
+---
+
+<section class="mt-12 pt-8 border-t border-[--color-border]">
+  <h2 class="text-lg font-semibold text-[--color-text-primary] mb-6 font-mono">
+    <span class="text-[--color-accent-green]">$</span> cat comments.txt
+  </h2>
+
+  <div id="giscus-container">
+    {repoId && categoryId ? (
+      <script
+        src="https://giscus.app/client.js"
+        data-repo={repo}
+        data-repo-id={repoId}
+        data-category={category}
+        data-category-id={categoryId}
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="dark"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async
+      />
+    ) : (
+      <div class="bg-[--color-bg-tertiary] rounded-lg p-6 text-center">
+        <p class="text-[--color-text-secondary] text-sm">
+          Comments are not yet configured. See <code>src/components/Comments.astro</code> for setup instructions.
+        </p>
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  // Update Giscus theme when page theme changes
+  function updateGiscusTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const theme = isDark ? 'dark' : 'light';
+
+    const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+    if (iframe) {
+      iframe.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme } } },
+        'https://giscus.app'
+      );
+    }
+  }
+
+  // Listen for theme changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        updateGiscusTheme();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, { attributes: true });
+</script>
+

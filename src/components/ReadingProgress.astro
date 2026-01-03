@@ -1,0 +1,197 @@
+---
+// Reading Progress Bar - Shows how far through the article the reader is
+// Title bar appears when scrolling up, hides when scrolling down
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!-- Title bar that appears on scroll -->
+<div id="reading-title-bar" class="reading-title-bar" aria-hidden="true" data-title={title}>
+  <div class="reading-title-bar-content">
+    <span class="reading-title-text"></span>
+    <span class="reading-progress-percent" role="status" aria-live="polite">0%</span>
+  </div>
+  <div id="reading-progress" class="reading-progress-bar"></div>
+</div>
+
+<style>
+  .reading-title-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999; /* Above everything except the progress line */
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .reading-title-bar.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .reading-title-bar-content {
+    max-width: 72rem; /* 6xl equivalent */
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  @media (min-width: 1024px) {
+    .reading-title-bar-content {
+      padding: 0.75rem 2rem;
+    }
+  }
+
+  .reading-title-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reading-progress-percent {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-accent-cyan);
+    flex-shrink: 0;
+  }
+
+  .reading-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-green));
+    width: 0%;
+    transition: width 0.1s ease-out;
+  }
+
+</style>
+
+<script>
+  let scrollHandler: EventListener | null = null;
+  let resizeHandler: EventListener | null = null;
+
+  function initReadingProgress() {
+    const titleBar = document.getElementById('reading-title-bar');
+    const progressBar = document.getElementById('reading-progress');
+    const headerProgressBar = document.getElementById('header-progress-bar');
+    const titleText = document.querySelector('.reading-title-text') as HTMLElement;
+    const progressPercent = document.querySelector('.reading-progress-percent') as HTMLElement;
+    const article = document.querySelector('article');
+
+    // Reset state on page transition
+    if (progressBar) {
+      progressBar.style.width = '0%';
+    }
+    if (headerProgressBar) {
+      headerProgressBar.style.width = '0%';
+    }
+    if (titleBar) {
+      titleBar.classList.remove('visible');
+    }
+
+    // Remove existing event listeners to prevent duplicates
+    if (scrollHandler) {
+      window.removeEventListener('scroll', scrollHandler);
+    }
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+    }
+
+    if (!titleBar || !progressBar || !article) return;
+
+    // Store references for closure (TypeScript null safety)
+    const titleBarEl = titleBar;
+    const progressBarEl = progressBar;
+    const articleEl = article;
+
+    // Get title from data attribute or from the page h1
+    const dataTitle = titleBarEl.getAttribute('data-title');
+    const pageTitle = document.querySelector('article h1')?.textContent || document.title;
+    const title = dataTitle || pageTitle;
+
+    if (titleText) {
+      titleText.textContent = title;
+    }
+
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    let isInArticle = false;
+
+    function updateProgress() {
+      const articleRect = articleEl.getBoundingClientRect();
+      const articleTop = window.scrollY + articleRect.top;
+      const articleHeight = articleEl.offsetHeight;
+      const windowHeight = window.innerHeight;
+      const currentScrollY = window.scrollY;
+
+      // Determine scroll direction
+      const scrollingUp = currentScrollY < lastScrollY;
+
+      // Check if we're within the article (past the header)
+      const headerHeight = 200; // Approximate height before showing title bar
+      isInArticle = currentScrollY > articleTop + headerHeight && currentScrollY < articleTop + articleHeight;
+
+      // Calculate progress
+      const scrolled = currentScrollY - articleTop + windowHeight * 0.3;
+      const scrollableDistance = Math.max(articleHeight - windowHeight, 1);
+      const progress = Math.min(Math.max((scrolled / scrollableDistance) * 100, 0), 100);
+
+      // Update progress bars and percentage
+      progressBarEl.style.width = `${progress}%`;
+      if (headerProgressBar) {
+        headerProgressBar.style.width = `${progress}%`;
+      }
+      if (progressPercent) {
+        progressPercent.textContent = `${Math.round(progress)}%`;
+      }
+
+      // Show title bar only when scrolling up AND within the article
+      if (isInArticle && scrollingUp) {
+        titleBarEl.classList.add('visible');
+      } else {
+        titleBarEl.classList.remove('visible');
+      }
+
+      lastScrollY = currentScrollY;
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(updateProgress);
+        ticking = true;
+      }
+    }
+
+    scrollHandler = onScroll as EventListener;
+    resizeHandler = updateProgress as EventListener;
+
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    window.addEventListener('resize', resizeHandler, { passive: true });
+    updateProgress();
+  }
+
+  // Initialize on page load
+  initReadingProgress();
+
+  // Re-initialize on Astro view transitions
+  document.addEventListener('astro:after-swap', initReadingProgress);
+</script>

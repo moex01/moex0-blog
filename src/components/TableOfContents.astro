@@ -1,0 +1,216 @@
+---
+// Table of Contents - Auto-generated from article headings
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// Filter to h2 and h3 only
+const filteredHeadings = headings.filter(h => h.depth >= 2 && h.depth <= 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class="toc" aria-label="Table of contents">
+    <details class="toc-mobile md:hidden" open>
+      <summary class="toc-title">
+        <span class="text-[--color-accent-green]">$</span> cat ./contents
+        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </summary>
+      <ul class="toc-list">
+        <li class="toc-item toc-overview">
+          <a href="#" class="toc-link">
+            <span class="toc-text">↑ Overview</span>
+          </a>
+        </li>
+        {filteredHeadings.map((heading) => (
+          <li class={`toc-item depth-${heading.depth}`}>
+            <a href={`#${heading.slug}`} class="toc-link">
+              <span class="toc-text">{heading.text}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
+
+    <div class="toc-desktop hidden md:block">
+      <h3 class="toc-title">
+        <span class="text-[--color-accent-green]">$</span> cat ./contents
+      </h3>
+      <ul class="toc-list">
+        <li class="toc-item toc-overview">
+          <a href="#" class="toc-link">
+            <span class="toc-text">↑ Overview</span>
+          </a>
+        </li>
+        {filteredHeadings.map((heading) => (
+          <li class={`toc-item depth-${heading.depth}`}>
+            <a href={`#${heading.slug}`} class="toc-link" data-slug={heading.slug}>
+              <span class="toc-text">{heading.text}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </nav>
+)}
+
+<style>
+  .toc {
+    margin-bottom: 2rem;
+  }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .toc-mobile summary {
+    list-style: none;
+  }
+
+  .toc-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .toc-mobile .chevron {
+    transition: transform 0.2s ease;
+  }
+
+  .toc-mobile[open] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-left: 1px solid var(--color-border);
+    padding-left: 1rem;
+  }
+
+  .toc-item {
+    margin-bottom: 0.5rem;
+  }
+
+  .toc-item.depth-3 {
+    padding-left: 1rem;
+  }
+
+  .toc-link {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 0.25rem 0;
+    position: relative;
+  }
+
+  .toc-link:hover {
+    color: var(--color-accent-cyan);
+  }
+
+  .toc-link.active {
+    color: var(--color-accent-cyan);
+    font-weight: 500;
+  }
+
+  .toc-link.active::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1rem;
+    background: var(--color-accent-cyan);
+    border-radius: 2px;
+  }
+
+  .toc-overview .toc-link {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  .toc-overview .toc-link:hover {
+    color: var(--color-accent-green);
+  }
+
+  .toc-text {
+    line-height: 1.4;
+  }
+
+</style>
+
+<script>
+  function initTOC() {
+    const tocLinks = document.querySelectorAll('.toc-link[data-slug]');
+    if (tocLinks.length === 0) return;
+
+    const headings = Array.from(tocLinks).map(link => {
+      const slug = link.getAttribute('data-slug');
+      const heading = document.getElementById(slug || '');
+      return { link, heading };
+    }).filter(item => item.heading);
+
+    function updateActiveLink() {
+      const scrollY = window.scrollY;
+      let activeIndex = 0;
+
+      headings.forEach((item, index) => {
+        if (item.heading) {
+          const top = item.heading.getBoundingClientRect().top + scrollY - 100;
+          if (scrollY >= top) {
+            activeIndex = index;
+          }
+        }
+      });
+
+      tocLinks.forEach((link, index) => {
+        link.classList.toggle('active', index === activeIndex);
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveLink, { passive: true });
+    updateActiveLink();
+
+    // Item 25: Remember ToC collapsed state using sessionStorage
+    const tocMobile = document.querySelector('.toc-mobile');
+    const storageKey = 'toc-collapsed';
+
+    if (tocMobile) {
+      // Restore state from sessionStorage
+      const isCollapsed = sessionStorage.getItem(storageKey) === 'true';
+      if (isCollapsed) {
+        tocMobile.removeAttribute('open');
+      }
+
+      // Save state on toggle
+      tocMobile.addEventListener('toggle', () => {
+        sessionStorage.setItem(storageKey, String(!tocMobile.open));
+      });
+    }
+  }
+
+  // Initialize on page load
+  initTOC();
+
+  // Re-initialize on Astro view transitions
+  document.addEventListener('astro:after-swap', initTOC);
+</script>

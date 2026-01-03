@@ -1,0 +1,137 @@
+---
+/**
+ * ArticleImage - Responsive image component for article content
+ *
+ * Provides:
+ * - Responsive image handling with multiple sizes for different screen widths
+ * - Automatic WebP conversion via Astro's image optimization
+ * - Lazy loading for images below the fold
+ * - Proper width/height attributes to prevent CLS
+ * - Optional caption support with figure/figcaption
+ * - Full-width mode for larger diagrams/screenshots
+ *
+ * Usage in MDX:
+ * ```
+ * import ArticleImage from '../../components/ArticleImage.astro';
+ * import myImage from '../../assets/images/example.png';
+ *
+ * <ArticleImage src={myImage} alt="Description" caption="Figure 1: Example" />
+ * <ArticleImage src={myImage} alt="Full width diagram" fullWidth />
+ * ```
+ */
+
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  /** Image source - imported image asset */
+  src: ImageMetadata;
+  /** Alt text for accessibility (required) */
+  alt: string;
+  /** Optional caption displayed below the image */
+  caption?: string;
+  /** Enable full-width mode for larger images/diagrams */
+  fullWidth?: boolean;
+  /** Loading behavior - defaults to lazy */
+  loading?: 'lazy' | 'eager';
+  /** Image quality (1-100) - defaults to 80 */
+  quality?: number;
+  /** Custom CSS class for the figure wrapper */
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  caption,
+  fullWidth = false,
+  loading = 'lazy',
+  quality = 80,
+  class: className = ''
+} = Astro.props;
+
+// Define responsive widths for srcset generation
+// These sizes cover common breakpoints and device pixel ratios
+const widths = fullWidth
+  ? [640, 768, 1024, 1280, 1536] // Full-width: larger sizes
+  : [320, 480, 640, 768, 960];   // Standard: smaller sizes for 80% width container
+
+// Calculate aspect ratio for proper sizing
+const aspectRatio = src.width / src.height;
+
+// Determine max display width based on mode
+// Standard mode: 80% of 48rem (768px) article width = ~614px
+// Full-width mode: 100% of 48rem = 768px, but can go larger on wide screens
+const maxDisplayWidth = fullWidth ? 1280 : 768;
+
+// Calculate optimal width (use original if smaller than max)
+const optimalWidth = Math.min(src.width, maxDisplayWidth);
+const optimalHeight = Math.round(optimalWidth / aspectRatio);
+
+// Generate sizes attribute for responsive behavior
+// This tells the browser which image size to download based on viewport
+const sizesAttr = fullWidth
+  ? '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 1280px'
+  : '(max-width: 640px) 90vw, (max-width: 768px) 80vw, 614px';
+---
+
+<figure class:list={[
+  'article-image',
+  { 'article-image--full-width': fullWidth },
+  className
+]}>
+  <Image
+    src={src}
+    alt={alt}
+    width={optimalWidth}
+    height={optimalHeight}
+    widths={widths}
+    sizes={sizesAttr}
+    loading={loading}
+    quality={quality}
+    format="webp"
+    decoding="async"
+  />
+  {caption && (
+    <figcaption>{caption}</figcaption>
+  )}
+</figure>
+
+<style>
+  .article-image {
+    margin: 1.5rem auto;
+    max-width: 80%;
+  }
+
+  .article-image--full-width {
+    max-width: 100%;
+  }
+
+  .article-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    display: block;
+  }
+
+  .article-image figcaption {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    font-style: normal;
+    margin-top: 0.5rem;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .article-image {
+      max-width: 100%;
+      margin: 1rem auto;
+    }
+
+    .article-image figcaption {
+      font-size: 0.8125rem;
+      padding: 0 0.5rem;
+    }
+  }
+</style>

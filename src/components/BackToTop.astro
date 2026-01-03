@@ -1,0 +1,78 @@
+---
+// Back to Top Button - Appears after scrolling down
+---
+
+<button
+  id="back-to-top"
+  class="back-to-top"
+  aria-label="Back to top"
+  title="cd ~"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+
+<style>
+  .back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    color: var(--color-accent-green);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .back-to-top:hover {
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+  }
+
+  .back-to-top:active {
+    transform: translateY(0);
+  }
+
+</style>
+
+<script>
+  function initBackToTop() {
+    const btn = document.getElementById('back-to-top');
+    if (!btn) return;
+
+    function toggleVisibility() {
+      if (!btn) return;
+      btn.classList.toggle('visible', window.scrollY > 300);
+    }
+
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
+    toggleVisibility();
+
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // Initialize on page load
+  initBackToTop();
+
+  // Re-initialize on Astro view transitions
+  document.addEventListener('astro:after-swap', initBackToTop);
+</script>
