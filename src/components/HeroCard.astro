@@ -1,0 +1,392 @@
+---
+import { getCategoryColor } from '../utils/categoryColors';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  slug: string;
+  tags?: string[];
+  readingTime?: string;
+  image?: string;
+}
+
+const { title, description, pubDate, updatedDate, slug, tags = [], readingTime, image } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+// Calculate "Updated X days ago" - only show if updatedDate differs from pubDate
+function getUpdatedAgo(updated: Date, published: Date): string | null {
+  const diffMs = updated.getTime() - published.getTime();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  if (diffMs < oneDayMs) return null;
+
+  const now = new Date();
+  const diffFromNow = now.getTime() - updated.getTime();
+  const daysAgo = Math.floor(diffFromNow / oneDayMs);
+
+  if (daysAgo === 0) return 'Updated today';
+  if (daysAgo === 1) return 'Updated yesterday';
+  if (daysAgo < 7) return `Updated ${daysAgo}d ago`;
+  if (daysAgo < 30) {
+    const weeks = Math.floor(daysAgo / 7);
+    return `Updated ${weeks}w ago`;
+  }
+  if (daysAgo < 365) {
+    const months = Math.floor(daysAgo / 30);
+    return `Updated ${months}mo ago`;
+  }
+  const years = Math.floor(daysAgo / 365);
+  return `Updated ${years}y ago`;
+}
+
+const updatedAgo = updatedDate ? getUpdatedAgo(updatedDate, pubDate) : null;
+
+const accentColor = getCategoryColor(tags[0]);
+---
+
+<article class="hero-card" style={`--hero-accent: ${accentColor};`}>
+  <!-- Latest Badge -->
+  <span class="hero-badge">Latest</span>
+
+  <!-- Background Image -->
+  {image && (
+    <div class="hero-image-wrapper">
+      <img
+        src={image}
+        alt=""
+        class="hero-image"
+        loading="eager"
+        decoding="async"
+      />
+      <div class="hero-overlay"></div>
+    </div>
+  )}
+
+  <!-- Fallback gradient if no image -->
+  {!image && (
+    <div class="hero-fallback"></div>
+  )}
+
+  <!-- Content -->
+  <div class="hero-content">
+    <div class="hero-meta">
+      {tags[0] && (
+        <a href={`/tags/${tags[0]}`} class="hero-category">
+          {tags[0]}
+        </a>
+      )}
+      <span class="hero-divider">/</span>
+      <time datetime={pubDate.toISOString()} class="hero-date">
+        {formattedDate}
+      </time>
+      {readingTime && (
+        <>
+          <span class="hero-divider">·</span>
+          <span class="hero-reading-time">{readingTime}</span>
+        </>
+      )}
+      {updatedAgo && (
+        <>
+          <span class="hero-divider">·</span>
+          <span class="hero-updated">{updatedAgo}</span>
+        </>
+      )}
+    </div>
+
+    <a href={`/blog/${slug}`} class="hero-title-link">
+      <h2 class="hero-title" transition:name={`article-title-${slug}`}>
+        {title}
+      </h2>
+    </a>
+
+    <p class="hero-description">
+      {description}
+    </p>
+
+    <a href={`/blog/${slug}`} class="hero-cta">
+      <span>Read Article</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14"/>
+        <path d="m12 5 7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+  <!-- Clickable overlay -->
+  <a href={`/blog/${slug}`} class="hero-link-overlay" aria-label={`Read: ${title}`}></a>
+</article>
+
+<style>
+  .hero-card {
+    --hero-accent: var(--color-accent-cyan);
+    
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (min-width: 768px) {
+    .hero-card {
+      min-height: 480px;
+    }
+  }
+
+  .hero-card:hover {
+    border-color: var(--hero-accent);
+    box-shadow:
+      0 20px 40px -12px rgba(0, 0, 0, 0.35),
+      0 0 0 1px color-mix(in srgb, var(--hero-accent) 30%, transparent);
+  }
+
+  /* Latest Badge */
+  .hero-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    padding: 0.375rem 0.875rem;
+    background: var(--color-accent-green);
+    color: #000;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.4);
+  }
+
+  /* Background Image */
+  .hero-image-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-card:hover .hero-image {
+    transform: scale(1.05);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.7) 35%,
+      rgba(0, 0, 0, 0.3) 60%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
+    transition: background 0.4s ease;
+  }
+
+  .hero-card:hover .hero-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.6) 35%,
+      rgba(0, 0, 0, 0.2) 60%,
+      rgba(0, 0, 0, 0.05) 100%
+    );
+  }
+
+  /* Fallback when no image */
+  .hero-fallback {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      var(--color-bg-secondary) 0%,
+      var(--color-bg-tertiary) 100%
+    );
+  }
+
+  /* Content */
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    min-height: inherit;
+    padding: 2rem;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .hero-content {
+      padding: 2.5rem 3rem;
+      max-width: 70%;
+    }
+  }
+
+  /* Meta row */
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .hero-category {
+    color: var(--hero-accent);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.625rem;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in srgb, var(--hero-accent) 30%, transparent);
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero-category:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--hero-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--hero-accent) 25%, transparent);
+  }
+
+  .hero-divider {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .hero-date,
+  .hero-reading-time {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .hero-updated {
+    color: var(--color-accent-green);
+    font-weight: 500;
+  }
+
+  /* Title */
+  .hero-title-link {
+    text-decoration: none;
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+    margin: 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: color 0.2s ease;
+  }
+
+  @media (min-width: 768px) {
+    .hero-title {
+      font-size: 2.25rem;
+    }
+  }
+
+  .hero-card:hover .hero-title {
+    color: var(--hero-accent);
+  }
+
+  /* Description */
+  .hero-description {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    max-width: 600px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .hero-description {
+      font-size: 1.0625rem;
+      -webkit-line-clamp: 3;
+    }
+  }
+
+  /* CTA Button */
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--hero-accent);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: fit-content;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero-cta svg {
+    transition: transform 0.3s ease;
+  }
+
+  .hero-cta:hover {
+    background: var(--hero-accent);
+    color: #000;
+    border-color: var(--hero-accent);
+  }
+
+  .hero-cta:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* Full card clickable overlay */
+  .hero-link-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card,
+    .hero-image,
+    .hero-overlay,
+    .hero-cta,
+    .hero-cta svg {
+      transition: none;
+    }
+
+    .hero-card:hover .hero-image {
+      transform: none;
+    }
+  }
+</style>

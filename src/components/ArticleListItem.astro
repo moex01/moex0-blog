@@ -1,0 +1,232 @@
+---
+import { getCategoryColor } from '../utils/categoryColors';
+
+interface Props {
+  title: string;
+  pubDate: Date;
+  slug: string;
+  tags?: string[];
+  readingTime?: string;
+}
+
+const { title, pubDate, slug, tags = [], readingTime } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+const accentColor = getCategoryColor(tags[0]);
+---
+
+<article class="list-item" style={`--item-accent: ${accentColor};`}>
+  <a href={`/blog/${slug}`} class="list-item-link">
+    <div class="list-item-main">
+      <div class="list-item-category-wrapper">
+        <span class="list-item-category">{tags[0] || 'Article'}</span>
+      </div>
+      
+      <h3 class="list-item-title" transition:name={`article-title-${slug}`}>
+        {title}
+      </h3>
+      
+      <div class="list-item-tags">
+        {tags.slice(1, 4).map((tag) => (
+          <span class="list-item-tag">#{tag}</span>
+        ))}
+      </div>
+    </div>
+
+    <div class="list-item-meta">
+      <time datetime={pubDate.toISOString()} class="list-item-date">
+        {formattedDate}
+      </time>
+      {readingTime && (
+        <span class="list-item-reading-time">{readingTime}</span>
+      )}
+      <span class="list-item-arrow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .list-item {
+    --item-accent: var(--color-accent-cyan);
+    
+    position: relative;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .list-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--item-accent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .list-item:hover {
+    border-color: var(--item-accent);
+    background: var(--color-bg-tertiary);
+    transform: translateX(4px);
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.12),
+      0 0 0 1px color-mix(in srgb, var(--item-accent) 20%, transparent);
+  }
+
+  .list-item:hover::before {
+    opacity: 1;
+  }
+
+  .list-item-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    text-decoration: none;
+  }
+
+  @media (max-width: 640px) {
+    .list-item-link {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+
+  .list-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .list-item-category-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .list-item-category {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--item-accent);
+    background: color-mix(in srgb, var(--item-accent) 12%, transparent);
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--item-accent) 30%, transparent);
+    transition: all 0.2s ease;
+  }
+
+  .list-item:hover .list-item-category {
+    background: color-mix(in srgb, var(--item-accent) 18%, transparent);
+    border-color: var(--item-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--item-accent) 25%, transparent);
+  }
+
+  .list-item-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+    margin: 0;
+    transition: color 0.2s ease;
+    
+    /* Truncate long titles */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .list-item:hover .list-item-title {
+    color: var(--item-accent);
+  }
+
+  .list-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .list-item-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+  }
+
+  .list-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 640px) {
+    .list-item-meta {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+
+  .list-item-date {
+    white-space: nowrap;
+  }
+
+  .list-item-reading-time {
+    white-space: nowrap;
+    color: var(--color-text-muted);
+  }
+
+  .list-item-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .list-item:hover .list-item-arrow {
+    background: var(--item-accent);
+    color: #000;
+    transform: translateX(2px);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .list-item,
+    .list-item::before,
+    .list-item-arrow {
+      transition: none;
+    }
+
+    .list-item:hover {
+      transform: none;
+    }
+  }
+</style>

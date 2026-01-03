@@ -1,0 +1,342 @@
+---
+import { getCategoryColor } from '../utils/categoryColors';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  slug: string;
+  tags?: string[];
+  readingTime?: string;
+  image?: string;
+}
+
+const { title, description, pubDate, slug, tags = [], readingTime, image } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+const accentColor = getCategoryColor(tags[0]);
+
+// Truncate description to ~100 chars
+const truncatedDesc = description.length > 100 
+  ? description.substring(0, description.lastIndexOf(' ', 100)) + '...'
+  : description;
+---
+
+<article class="list-item-enhanced" style={`--item-accent: ${accentColor};`}>
+  <a href={`/blog/${slug}`} class="list-item-link">
+    <!-- Thumbnail -->
+    {image ? (
+      <div class="list-item-thumbnail">
+        <img 
+          src={image} 
+          alt="" 
+          loading="lazy" 
+          decoding="async"
+        />
+      </div>
+    ) : (
+      <div class="list-item-thumbnail list-item-thumbnail--placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+      </div>
+    )}
+
+    <!-- Content -->
+    <div class="list-item-content">
+      <!-- Top row: Category + Date -->
+      <div class="list-item-top">
+        <span class="list-item-category">{tags[0] || 'Article'}</span>
+        <span class="list-item-date">{formattedDate}</span>
+      </div>
+
+      <!-- Title -->
+      <h3 class="list-item-title" transition:name={`article-title-${slug}`}>
+        {title}
+      </h3>
+
+      <!-- Description -->
+      <p class="list-item-description">
+        {truncatedDesc}
+      </p>
+
+      <!-- Bottom row: Tags + Reading time -->
+      <div class="list-item-bottom">
+        <div class="list-item-tags">
+          {tags.slice(1, 3).map((tag) => (
+            <span class="list-item-tag">#{tag}</span>
+          ))}
+        </div>
+        <div class="list-item-meta">
+          {readingTime && (
+            <span class="list-item-reading-time">{readingTime}</span>
+          )}
+          <span class="list-item-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .list-item-enhanced {
+    --item-accent: var(--color-accent-cyan);
+    
+    position: relative;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .list-item-enhanced::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--item-accent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .list-item-enhanced:hover {
+    border-color: var(--item-accent);
+    background: var(--color-bg-tertiary);
+    transform: translateX(4px);
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.15),
+      0 0 0 1px color-mix(in srgb, var(--item-accent) 20%, transparent);
+  }
+
+  .list-item-enhanced:hover::before {
+    opacity: 1;
+  }
+
+  .list-item-link {
+    display: flex;
+    align-items: stretch;
+    gap: 1.25rem;
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+  }
+
+  /* Thumbnail */
+  .list-item-thumbnail {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--color-bg-tertiary);
+  }
+
+  .list-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .list-item-enhanced:hover .list-item-thumbnail img {
+    transform: scale(1.1);
+  }
+
+  .list-item-thumbnail--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+  }
+
+  /* Content */
+  .list-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  /* Top row */
+  .list-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .list-item-category {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--item-accent);
+    background: color-mix(in srgb, var(--item-accent) 12%, transparent);
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--item-accent) 30%, transparent);
+    transition: all 0.2s ease;
+  }
+
+  .list-item-enhanced:hover .list-item-category {
+    background: color-mix(in srgb, var(--item-accent) 18%, transparent);
+    border-color: var(--item-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--item-accent) 25%, transparent);
+  }
+
+  .list-item-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Title */
+  .list-item-title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-text-primary);
+    margin: 0;
+    transition: color 0.2s ease;
+    
+    /* Single line truncate */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .list-item-enhanced:hover .list-item-title {
+    color: var(--item-accent);
+  }
+
+  /* Description */
+  .list-item-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    margin: 0;
+    
+    /* Single line truncate */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Bottom row */
+  .list-item-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: auto;
+  }
+
+  .list-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .list-item-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+  }
+
+  .list-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .list-item-reading-time {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .list-item-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .list-item-enhanced:hover .list-item-arrow {
+    background: var(--item-accent);
+    color: #000;
+    transform: translateX(2px);
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .list-item-link {
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .list-item-thumbnail {
+      width: 64px;
+      height: 64px;
+    }
+
+    .list-item-title {
+      font-size: 0.9375rem;
+      white-space: normal;
+      -webkit-line-clamp: 2;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+    }
+
+    .list-item-description {
+      display: none;
+    }
+
+    .list-item-bottom {
+      flex-wrap: wrap;
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .list-item-enhanced,
+    .list-item-enhanced::before,
+    .list-item-thumbnail img,
+    .list-item-arrow {
+      transition: none;
+    }
+
+    .list-item-enhanced:hover {
+      transform: none;
+    }
+
+    .list-item-enhanced:hover .list-item-thumbnail img {
+      transform: none;
+    }
+  }
+</style>

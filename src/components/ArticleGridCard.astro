@@ -1,0 +1,274 @@
+---
+import { getCategoryColor } from '../utils/categoryColors';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  slug: string;
+  tags?: string[];
+  readingTime?: string;
+  image?: string;
+}
+
+const { title, description, pubDate, slug, tags = [], readingTime, image } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+const accentColor = getCategoryColor(tags[0]);
+
+// Truncate description
+const truncatedDesc = description.length > 80 
+  ? description.substring(0, description.lastIndexOf(' ', 80)) + '...'
+  : description;
+---
+
+<article class="grid-card" style={`--card-accent: ${accentColor};`}>
+  <a href={`/blog/${slug}`} class="grid-card-link">
+    <!-- Image -->
+    <div class="grid-card-image">
+      {image ? (
+        <img 
+          src={image} 
+          alt="" 
+          loading="lazy" 
+          decoding="async"
+        />
+      ) : (
+        <div class="grid-card-placeholder">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+      )}
+      <div class="grid-card-overlay"></div>
+      
+      <!-- Category badge on image -->
+      <span class="grid-card-category">{tags[0] || 'Article'}</span>
+    </div>
+
+    <!-- Content -->
+    <div class="grid-card-content">
+      <h3 class="grid-card-title">
+        {title}
+      </h3>
+      
+      <p class="grid-card-description">
+        {truncatedDesc}
+      </p>
+
+      <div class="grid-card-footer">
+        <span class="grid-card-date">{formattedDate}</span>
+        {readingTime && (
+          <>
+            <span class="grid-card-dot">·</span>
+            <span class="grid-card-time">{readingTime}</span>
+          </>
+        )}
+        <span class="grid-card-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .grid-card {
+    --card-accent: var(--color-accent-cyan);
+    
+    position: relative;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .grid-card:hover {
+    border-color: var(--card-accent);
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 24px -8px rgba(0, 0, 0, 0.25),
+      0 0 0 1px color-mix(in srgb, var(--card-accent) 25%, transparent);
+  }
+
+  .grid-card-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    height: 100%;
+  }
+
+  /* Image */
+  .grid-card-image {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-bg-tertiary);
+  }
+
+  .grid-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .grid-card:hover .grid-card-image img {
+    transform: scale(1.08);
+  }
+
+  .grid-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+  }
+
+  .grid-card:hover .grid-card-overlay {
+    opacity: 0.5;
+  }
+
+  .grid-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+  }
+
+  /* Category badge */
+  .grid-card-category {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--card-accent);
+    background: color-mix(in srgb, var(--card-accent) 15%, rgba(0, 0, 0, 0.6));
+    backdrop-filter: blur(4px);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--card-accent) 30%, transparent);
+    z-index: 2;
+    transition: all 0.2s ease;
+  }
+
+  .grid-card:hover .grid-card-category {
+    background: color-mix(in srgb, var(--card-accent) 25%, rgba(0, 0, 0, 0.7));
+    border-color: var(--card-accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--card-accent) 30%, transparent);
+  }
+
+  /* Content */
+  .grid-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    flex: 1;
+  }
+
+  .grid-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+    margin: 0;
+    transition: color 0.2s ease;
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .grid-card:hover .grid-card-title {
+    color: var(--card-accent);
+  }
+
+  .grid-card-description {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    margin: 0;
+    flex: 1;
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .grid-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .grid-card-dot {
+    opacity: 0.5;
+  }
+
+  .grid-card-arrow {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .grid-card:hover .grid-card-arrow {
+    background: var(--card-accent);
+    color: #000;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .grid-card,
+    .grid-card-image img,
+    .grid-card-overlay,
+    .grid-card-arrow {
+      transition: none;
+    }
+
+    .grid-card:hover {
+      transform: none;
+    }
+
+    .grid-card:hover .grid-card-image img {
+      transform: none;
+    }
+  }
+</style>

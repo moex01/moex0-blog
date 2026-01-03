@@ -1,0 +1,112 @@
+---
+import ThreatBadge from './ThreatBadge.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  slug: string;
+  tags?: string[];
+  readingTime?: string;
+}
+
+const { title, description, pubDate, updatedDate, slug, tags = [], readingTime } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+// Calculate "Updated X days ago" - only show if updatedDate differs from pubDate
+function getUpdatedAgo(updated: Date, published: Date): string | null {
+  // Only show if updatedDate is at least 1 day after pubDate
+  const diffMs = updated.getTime() - published.getTime();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  if (diffMs < oneDayMs) return null;
+
+  const now = new Date();
+  const diffFromNow = now.getTime() - updated.getTime();
+  const daysAgo = Math.floor(diffFromNow / oneDayMs);
+
+  if (daysAgo === 0) return 'Updated today';
+  if (daysAgo === 1) return 'Updated yesterday';
+  if (daysAgo < 7) return `Updated ${daysAgo} days ago`;
+  if (daysAgo < 30) {
+    const weeks = Math.floor(daysAgo / 7);
+    return `Updated ${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+  }
+  if (daysAgo < 365) {
+    const months = Math.floor(daysAgo / 30);
+    return `Updated ${months} ${months === 1 ? 'month' : 'months'} ago`;
+  }
+  const years = Math.floor(daysAgo / 365);
+  return `Updated ${years} ${years === 1 ? 'year' : 'years'} ago`;
+}
+
+const updatedAgo = updatedDate ? getUpdatedAgo(updatedDate, pubDate) : null;
+
+// Get primary category for threat badge
+const primaryCategory = tags?.[0];
+---
+
+<article class="article-card group border border-[--color-border] rounded-lg p-6 hover:border-[--color-accent-cyan] bg-[--color-bg-secondary]">
+  <!-- Threat Badge and Date/Time -->
+  <div class="flex items-center justify-between gap-3 mb-3">
+    <div class="flex items-center gap-3 text-xs font-mono text-[--color-text-muted]">
+      <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+      {readingTime && (
+        <>
+          <span class="text-[--color-border]">|</span>
+          <span>{readingTime}</span>
+        </>
+      )}
+      {updatedAgo && (
+        <>
+          <span class="text-[--color-border]">|</span>
+          <span class="text-[--color-accent-green]">{updatedAgo}</span>
+        </>
+      )}
+    </div>
+    {primaryCategory && <ThreatBadge category={primaryCategory} size="sm" />}
+  </div>
+
+  <!-- Title -->
+  <a href={`/blog/${slug}`} class="block">
+    <h2 class="text-xl font-semibold text-[--color-text-primary] group-hover:text-[--color-accent-cyan] transition-colors mb-2" transition:name={`article-title-${slug}`}>
+      {title}
+    </h2>
+  </a>
+
+  <!-- Description -->
+  <p class="text-[--color-text-secondary] text-sm line-clamp-2 mb-4">
+    {description}
+  </p>
+
+  <!-- Tags -->
+  {tags.length > 0 && (
+    <div class="flex flex-wrap gap-2">
+      {tags.map((tag) => (
+        <a
+          href={`/tags/${tag}`}
+          class="px-2 py-1 text-xs font-mono bg-[--color-bg-tertiary] text-[--color-accent-indigo] rounded hover:bg-[--color-accent-indigo] hover:text-white transition-colors"
+        >
+          #{tag}
+        </a>
+      ))}
+    </div>
+  )}
+</article>
+
+<style>
+  /* Item 19: Hover lift effect on article cards */
+  .article-card {
+    transition: all 0.3s ease;
+  }
+
+  .article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+</style>
