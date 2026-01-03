@@ -1,0 +1,290 @@
+---
+const navLinks = [
+  { href: '/', label: 'Blog' },
+  { href: '/tags', label: 'Tags' },
+  { href: '/about', label: 'whoami' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="site-header sticky top-0 z-50 border-b border-[--color-border] bg-[--color-bg-primary]/80 backdrop-blur-md">
+  <!-- Reading progress bar - positioned at bottom of header -->
+  <div id="header-progress-bar" class="header-progress-bar"></div>
+
+  <nav class="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 group">
+      <span class="text-[--color-accent-green] font-mono text-xl font-bold group-hover:glow-green transition-all">
+        ~/moex0
+      </span>
+      <span class="text-[--color-text-muted] font-mono cursor-blink">_</span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <div class="hidden sm:flex items-center gap-6">
+      <ul class="flex items-center gap-4">
+        {navLinks.map(({ href, label }) => (
+          <li>
+            <a
+              href={href}
+              class:list={[
+                'nav-link font-mono text-sm',
+                currentPath === href || (href !== '/' && currentPath.startsWith(href))
+                  ? 'text-[--color-accent-cyan]'
+                  : 'text-[--color-text-secondary] hover:text-[--color-text-primary]'
+              ]}
+            >
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <!-- Search Button -->
+      <button
+        onclick="window.openSearch?.()"
+        class="flex items-center gap-1.5 px-2 py-1 text-[--color-text-muted] hover:text-[--color-text-primary] bg-[--color-bg-tertiary] border border-[--color-border] rounded-md transition-colors"
+        title="Search (Cmd/Ctrl+K)"
+        aria-label="Search articles (Command+K)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span class="font-mono text-xs">⌘K</span>
+      </button>
+
+      <!-- RSS Link -->
+      <a
+        href="/rss.xml"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-[--color-text-secondary] hover:text-[--color-accent-cyan] transition-colors"
+        title="RSS Feed"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Mobile: Search + Hamburger -->
+    <div class="flex sm:hidden items-center gap-3">
+      <!-- Mobile Search Button -->
+      <button
+        onclick="window.openSearch?.()"
+        class="flex items-center justify-center w-9 h-9 text-[--color-text-muted] hover:text-[--color-text-primary] bg-[--color-bg-tertiary] border border-[--color-border] rounded-md transition-colors"
+        title="Search"
+        aria-label="Search"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+
+      <!-- Hamburger Button -->
+      <button
+        id="mobile-menu-btn"
+        class="flex items-center justify-center w-9 h-9 text-[--color-text-secondary] hover:text-[--color-text-primary] transition-colors"
+        aria-label="Open menu"
+        aria-expanded="false"
+      >
+        <svg class="hamburger-icon w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg class="close-icon w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="mobile-menu hidden sm:hidden">
+    <ul class="mobile-nav-links">
+      {navLinks.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class:list={[
+              'mobile-nav-link',
+              (currentPath === href || (href !== '/' && currentPath.startsWith(href))) && 'active'
+            ]}
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <div class="mobile-menu-actions">
+      <a
+        href="/rss.xml"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mobile-action-link"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"/>
+        </svg>
+        <span>RSS Feed</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  function initMobileMenu() {
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamburgerIcon = menuBtn?.querySelector('.hamburger-icon');
+    const closeIcon = menuBtn?.querySelector('.close-icon');
+
+    if (!menuBtn || !mobileMenu) return;
+
+    menuBtn.addEventListener('click', () => {
+      const isOpen = !mobileMenu.classList.contains('hidden');
+
+      if (isOpen) {
+        mobileMenu.classList.add('hidden');
+        hamburgerIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.setAttribute('aria-label', 'Open menu');
+      } else {
+        mobileMenu.classList.remove('hidden');
+        hamburgerIcon?.classList.add('hidden');
+        closeIcon?.classList.remove('hidden');
+        menuBtn.setAttribute('aria-expanded', 'true');
+        menuBtn.setAttribute('aria-label', 'Close menu');
+      }
+    });
+
+    // Close menu when clicking a link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        hamburgerIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.setAttribute('aria-label', 'Open menu');
+      });
+    });
+
+    // Escape key handling for mobile menu
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        hamburgerIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.setAttribute('aria-label', 'Open menu');
+      }
+    });
+  }
+
+  initMobileMenu();
+  document.addEventListener('astro:after-swap', initMobileMenu);
+</script>
+
+<style>
+  /* Item 17: Progress bar with shimmer gradient animation */
+  .header-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-cyan),
+      var(--color-accent-green),
+      var(--color-accent-cyan)
+    );
+    background-size: 200% 100%;
+    animation: progress-shimmer 3s ease infinite;
+    transition: width 0.15s ease-out;
+    pointer-events: none;
+  }
+
+  /* Item 5: Subtle hover effect for navigation links */
+  .nav-link {
+    display: inline-block;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  .nav-link:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Item 15: Mobile Menu with slide-down animation */
+  .mobile-menu {
+    padding: 1rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  }
+
+  .mobile-menu:not(.hidden) {
+    max-height: 400px;
+    opacity: 1;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+  }
+
+  .mobile-nav-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-link:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+  }
+
+  .mobile-nav-link.active {
+    color: var(--color-accent-cyan);
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .mobile-menu-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .mobile-action-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-action-link:hover {
+    color: var(--color-accent-cyan);
+  }
+
+</style>

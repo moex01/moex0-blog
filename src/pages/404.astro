@@ -1,0 +1,287 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 - Not Found" description="Page not found">
+  <div class="error-page">
+    <!-- Terminal Window -->
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="terminal-buttons">
+          <span class="terminal-btn terminal-btn-red"></span>
+          <span class="terminal-btn terminal-btn-yellow"></span>
+          <span class="terminal-btn terminal-btn-green"></span>
+        </div>
+        <span class="terminal-title">bash - moex0@blog</span>
+      </div>
+      
+      <div class="terminal-body">
+        <div class="terminal-line">
+          <span class="prompt">moex0@blog</span><span class="separator">:</span><span class="path">~</span><span class="dollar">$</span>
+          <span class="command">cd <span class="error-path" id="requested-path">/requested-page</span></span>
+        </div>
+        
+        <div class="terminal-line error-line">
+          <span class="error-text">bash: cd: <span id="error-path-display">/requested-page</span>: No such file or directory</span>
+        </div>
+        
+        <div class="terminal-line">
+          <span class="prompt">moex0@blog</span><span class="separator">:</span><span class="path">~</span><span class="dollar">$</span>
+          <span class="command">echo $?</span>
+        </div>
+        
+        <div class="terminal-line">
+          <span class="exit-code">404</span>
+        </div>
+        
+        <div class="terminal-line">
+          <span class="prompt">moex0@blog</span><span class="separator">:</span><span class="path">~</span><span class="dollar">$</span>
+          <span class="command">ls ./suggestions</span>
+        </div>
+        
+        <div class="suggestions">
+          <a href="/" class="suggestion-link">
+            <span class="suggestion-icon">~</span>
+            <span class="suggestion-text">cd ~/blog</span>
+            <span class="suggestion-desc">Back to homepage</span>
+          </a>
+          <button onclick="window.openSearch?.()" class="suggestion-link suggestion-btn">
+            <span class="suggestion-icon">/</span>
+            <span class="suggestion-text">grep -r "query"</span>
+            <span class="suggestion-desc">Search articles (Cmd+K)</span>
+          </button>
+          <a href="/tags" class="suggestion-link">
+            <span class="suggestion-icon">#</span>
+            <span class="suggestion-text">ls ./tags</span>
+            <span class="suggestion-desc">Browse by topic</span>
+          </a>
+          <a href="/about" class="suggestion-link">
+            <span class="suggestion-icon">?</span>
+            <span class="suggestion-text">whoami</span>
+            <span class="suggestion-desc">About me</span>
+          </a>
+        </div>
+        
+        <div class="terminal-line cursor-line">
+          <span class="prompt">moex0@blog</span><span class="separator">:</span><span class="path">~</span><span class="dollar">$</span>
+          <span class="cursor">_</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ASCII Art (hidden on mobile) -->
+    <div class="ascii-art" aria-hidden="true">
+      <pre>
+   _  _    ___  _  _   
+  | || |  / _ \| || |  
+  | || |_| | | | || |_ 
+  |__   _| | | |__   _|
+     | | | |_| |  | |  
+     |_|  \___/   |_|  
+      </pre>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // Update the error path with the actual requested URL
+  function updateErrorPath() {
+    const path = window.location.pathname;
+    const requestedPath = document.getElementById('requested-path');
+    const errorPathDisplay = document.getElementById('error-path-display');
+    
+    if (requestedPath) requestedPath.textContent = path;
+    if (errorPathDisplay) errorPathDisplay.textContent = path;
+  }
+  
+  updateErrorPath();
+  document.addEventListener('astro:after-swap', updateErrorPath);
+</script>
+
+<style>
+  .error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 2rem;
+  }
+
+  /* Terminal Window */
+  .terminal-window {
+    width: 100%;
+    max-width: 600px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-tertiary);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .terminal-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .terminal-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .terminal-btn-red { background: #ff5f56; }
+  .terminal-btn-yellow { background: #ffbd2e; }
+  .terminal-btn-green { background: #27ca40; }
+
+  .terminal-title {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .terminal-body {
+    padding: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.8;
+  }
+
+  .terminal-line {
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .prompt { color: var(--color-accent-green); }
+  .separator { color: var(--color-text-muted); }
+  .path { color: var(--color-accent-cyan); }
+  .dollar { color: var(--color-text-muted); margin: 0 0.5rem; }
+  .command { color: var(--color-text-primary); }
+  .error-path { color: var(--color-text-secondary); }
+
+  .error-line {
+    margin: 0.25rem 0;
+  }
+
+  .error-text {
+    color: #f85149;
+  }
+
+  .exit-code {
+    color: var(--color-accent-cyan);
+    font-weight: 600;
+  }
+
+  /* Suggestions */
+  .suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.75rem 0 1rem;
+    padding-left: 1rem;
+  }
+
+  .suggestion-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .suggestion-btn {
+    color: inherit;
+  }
+
+  .suggestion-link:hover {
+    border-color: var(--color-accent-cyan);
+    transform: translateX(4px);
+  }
+
+  .suggestion-icon {
+    color: var(--color-accent-green);
+    font-weight: 600;
+    width: 1rem;
+    text-align: center;
+  }
+
+  .suggestion-text {
+    color: var(--color-accent-cyan);
+    flex-shrink: 0;
+  }
+
+  .suggestion-desc {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+
+  /* Cursor */
+  .cursor-line {
+    margin-top: 0.5rem;
+  }
+
+  .cursor {
+    color: var(--color-accent-green);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* ASCII Art */
+  .ascii-art {
+    display: none;
+    color: var(--color-text-muted);
+    opacity: 0.3;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    user-select: none;
+  }
+
+  .ascii-art pre {
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .ascii-art {
+      display: block;
+    }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 640px) {
+    .terminal-body {
+      padding: 1rem;
+      font-size: 0.8125rem;
+    }
+
+    .suggestion-desc {
+      display: none;
+    }
+
+    .suggestions {
+      padding-left: 0;
+    }
+  }
+</style>

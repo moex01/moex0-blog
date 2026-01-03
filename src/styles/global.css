@@ -1,0 +1,966 @@
+@import "tailwindcss";
+
+/* Custom theme variables */
+@theme {
+  /* Dark theme colors - Softer Cyber aesthetic
+     Easier on the eyes for long reading sessions
+     while maintaining the hacker/terminal vibe */
+  --color-bg-primary: #0c0e12;
+  --color-bg-secondary: #151921;
+  --color-bg-tertiary: #1c222d;
+
+  /* Text - Improved contrast for readability */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #b0bac5;
+  --color-text-muted: #8b949e;
+
+  /* Accent colors - Softer but still vibrant */
+  --color-accent-green: #34d399;
+  --color-accent-green-bright: #4ade80;
+  --color-accent-cyan: #38bdf8;
+  --color-accent-cyan-bright: #5eead4;
+  --color-accent-indigo: #6366f1;
+  --color-accent-indigo-bright: #818cf8;
+  --color-accent-purple: #a78bfa;
+  --color-accent-orange: #fb923c;
+  --color-accent-red: #f87171;
+
+  /* Borders - More visible for better UI definition */
+  --color-border: #3d4654;
+  --color-border-hover: #4d5768;
+  --color-border-subtle: #2a3140;
+
+  /* Fonts */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Subtle grid background - softer visibility */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+/* Headings - Space Grotesk with tight tracking */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Code blocks styling - Dual theme support */
+/* Override Tailwind's default line-height for code */
+pre,
+pre *,
+pre code,
+pre code * {
+  line-height: 1.5 !important;
+}
+
+pre {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  margin: 1.5rem 0;
+  background: var(--color-bg-secondary) !important;
+}
+
+pre code {
+  background: transparent !important;
+  display: block;
+}
+
+/* Shiki dark theme only */
+pre .shiki-dark {
+  display: block;
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+/* Inline code */
+:not(pre) > code {
+  background-color: var(--color-bg-tertiary);
+  padding: 0.1875rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  border: 1px solid var(--color-border);
+}
+
+/* Links */
+a {
+  color: var(--color-accent-cyan);
+  text-decoration: none;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-accent-green);
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent-cyan);
+  color: var(--color-bg-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Terminal prompt effect for headings */
+.terminal-prompt::before {
+  content: '$ ';
+  color: var(--color-accent-green);
+  font-family: var(--font-mono);
+}
+
+/* Glowing effect for accent elements - softer glow */
+.glow-green {
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.6), 0 0 25px rgba(52, 211, 153, 0.3);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 25px rgba(56, 189, 248, 0.3);
+}
+
+.glow-indigo {
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.6), 0 0 25px rgba(99, 102, 241, 0.3);
+}
+
+/* Tech border corners - like ThreatHuntingLabs */
+.tech-border {
+  position: relative;
+}
+
+.tech-border::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid var(--color-accent-cyan);
+  border-left: 2px solid var(--color-accent-cyan);
+  z-index: 10;
+}
+
+.tech-border::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid var(--color-accent-cyan);
+  border-right: 2px solid var(--color-accent-cyan);
+  z-index: 10;
+}
+
+/* Code block wrapper and header */
+.code-block-wrapper {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Code filename header - appears above code-block-header when present */
+.code-filename {
+  background: var(--color-bg-tertiary);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.code-block-wrapper:has(.code-filename) .code-block-header {
+  border-radius: 0;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  font-size: 0.75rem;
+}
+
+.code-language-label {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Code copy button (now in header) */
+.code-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-copy-btn:hover {
+  border-color: var(--color-accent-cyan);
+  color: var(--color-accent-cyan);
+}
+
+.code-copy-btn.copied {
+  border-color: var(--color-accent-green);
+  color: var(--color-accent-green);
+}
+
+.code-copy-btn .hidden {
+  display: none;
+}
+
+/* Line numbers */
+pre code .line {
+  display: block;
+  position: relative;
+  padding-left: 3.5rem;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+pre code .line::before {
+  content: attr(data-line-number);
+  position: absolute;
+  left: 0;
+  width: 2rem;
+  text-align: right;
+  color: var(--color-text-muted);
+  opacity: 0.4;
+  font-size: 0.8em;
+  user-select: none;
+  padding-right: 1rem;
+}
+
+/* GitBook-style Callout Boxes */
+.callout {
+  display: flex;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid;
+  font-style: normal;
+}
+
+.callout-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.callout-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.callout-content p {
+  margin: 0;
+  font-style: normal;
+}
+
+.callout-content p:first-child {
+  margin-top: 0;
+}
+
+.callout-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Danger/Warning callout - Red */
+.callout-danger {
+  background-color: rgba(248, 113, 113, 0.1);
+  border-left-color: var(--color-accent-red);
+}
+
+.callout-danger .callout-icon {
+  color: var(--color-accent-red);
+}
+
+/* Info callout - Cyan */
+.callout-info {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-left-color: var(--color-accent-cyan);
+}
+
+.callout-info .callout-icon {
+  color: var(--color-accent-cyan);
+}
+
+/* Tip/Success callout - Green */
+.callout-tip {
+  background-color: rgba(52, 211, 153, 0.1);
+  border-left-color: var(--color-accent-green);
+}
+
+.callout-tip .callout-icon {
+  color: var(--color-accent-green);
+}
+
+/* Warning callout - Orange */
+.callout-warning {
+  background-color: rgba(251, 146, 60, 0.1);
+  border-left-color: var(--color-accent-orange);
+}
+
+.callout-warning .callout-icon {
+  color: var(--color-accent-orange);
+}
+
+/* Note callout - Purple */
+.callout-note {
+  background-color: rgba(167, 139, 250, 0.1);
+  border-left-color: var(--color-accent-purple);
+}
+
+.callout-note .callout-icon {
+  color: var(--color-accent-purple);
+}
+
+/* ========================================
+   GitBook-style Image Lightbox
+   ======================================== */
+
+/* Make article images clickable */
+.article-content img {
+  cursor: zoom-in;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.article-content img:hover {
+  opacity: 0.9;
+  transform: scale(1.01);
+}
+
+/* Lightbox overlay */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  cursor: zoom-out;
+  padding: 2rem;
+}
+
+.image-lightbox.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Lightbox image container */
+.image-lightbox-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Lightbox image */
+.image-lightbox img {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 60px rgba(56, 189, 248, 0.15);
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.image-lightbox.active img {
+  transform: scale(1);
+}
+
+/* Lightbox caption */
+.image-lightbox-caption {
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9375rem;
+  text-align: center;
+  max-width: 80%;
+  line-height: 1.5;
+}
+
+/* Close button */
+.image-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10000;
+}
+
+.image-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--color-accent-cyan);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.image-lightbox-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Navigation arrows */
+.image-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.image-lightbox.active .image-lightbox-nav {
+  opacity: 1;
+}
+
+.image-lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--color-accent-cyan);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.image-lightbox-nav.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.image-lightbox-nav.disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.image-lightbox-prev {
+  left: 1rem;
+}
+
+.image-lightbox-next {
+  right: 1rem;
+}
+
+.image-lightbox-nav svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Image counter */
+.image-lightbox-counter {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+}
+
+/* Keyboard hint */
+.image-lightbox-hint {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  transition: all 0.3s ease;
+}
+
+/* Item 26: Larger hint on first open */
+.image-lightbox-hint.first-time {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .image-lightbox {
+    padding: 1rem;
+  }
+
+  .image-lightbox-nav {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .image-lightbox-prev {
+    left: 0.5rem;
+  }
+
+  .image-lightbox-next {
+    right: 0.5rem;
+  }
+
+  .image-lightbox-close {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .image-lightbox-hint {
+    display: none;
+  }
+
+  .image-lightbox-caption {
+    font-size: 0.8125rem;
+    max-width: 95%;
+  }
+}
+
+/* ========================================
+   Scanline Effect (subtle CRT feel)
+   ======================================== */
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  opacity: 0.03;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.3) 2px,
+    rgba(0, 0, 0, 0.3) 4px
+  );
+}
+
+/* ========================================
+   Glow Utilities - Softer, easier on eyes
+   ======================================== */
+.neon-border {
+  box-shadow: 
+    0 0 8px rgba(56, 189, 248, 0.4),
+    0 0 20px rgba(56, 189, 248, 0.2),
+    inset 0 0 8px rgba(56, 189, 248, 0.05);
+}
+
+.neon-text {
+  text-shadow: 
+    0 0 8px currentColor,
+    0 0 16px rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   Status Indicators (like system status)
+   ======================================== */
+.status-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-online::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.4);
+  }
+}
+
+/* ========================================
+   Skip to Content Link (Accessibility)
+   ======================================== */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-accent-cyan);
+  color: var(--color-bg-primary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0 0 0.5rem 0.5rem;
+  z-index: 9999;
+  transition: top 0.2s ease;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   Visual Polish & Animations
+   Items 4-6, 15-19 from design-improvements.md
+   ======================================== */
+
+/* Item 6: Gentle blink animation for cursor - softer than default pulse */
+@keyframes gentle-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.cursor-blink {
+  animation: gentle-blink 1.2s ease-in-out infinite;
+}
+
+/* Item 17: Progress bar shimmer animation */
+@keyframes progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Item 16: Skeleton loading shimmer for search */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  height: 1rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    var(--color-bg-secondary) 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.skeleton-line.w-full { width: 100%; }
+.skeleton-line.w-3-4 { width: 75%; }
+.skeleton-line.w-1-2 { width: 50%; }
+
+/* Item 18: Lightbox backdrop blur - enhanced visual effect */
+.image-lightbox {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ========================================
+   Focus Indicators (Accessibility)
+   Item 13 from design-improvements.md
+   ======================================== */
+:focus-visible {
+  outline: 2px solid var(--color-accent-cyan);
+  outline-offset: 2px;
+}
+
+html.light :focus-visible {
+  outline-color: #0969da;
+}
+
+/* ========================================
+   Glitch Text Effect
+   Subtle, tasteful glitch for headings
+   ======================================== */
+
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--color-accent-cyan);
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 var(--color-accent-green);
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+  0% {
+    clip: rect(86px, 9999px, 137px, 0);
+  }
+  5% {
+    clip: rect(17px, 9999px, 31px, 0);
+  }
+  10% {
+    clip: rect(134px, 9999px, 29px, 0);
+  }
+  15% {
+    clip: rect(26px, 9999px, 84px, 0);
+  }
+  20% {
+    clip: rect(47px, 9999px, 96px, 0);
+  }
+  25% {
+    clip: rect(108px, 9999px, 15px, 0);
+  }
+  30% {
+    clip: rect(42px, 9999px, 53px, 0);
+  }
+  35% {
+    clip: rect(91px, 9999px, 126px, 0);
+  }
+  40% {
+    clip: rect(64px, 9999px, 72px, 0);
+  }
+  45% {
+    clip: rect(19px, 9999px, 88px, 0);
+  }
+  50% {
+    clip: rect(103px, 9999px, 41px, 0);
+  }
+  55% {
+    clip: rect(75px, 9999px, 114px, 0);
+  }
+  60% {
+    clip: rect(58px, 9999px, 67px, 0);
+  }
+  65% {
+    clip: rect(31px, 9999px, 95px, 0);
+  }
+  70% {
+    clip: rect(122px, 9999px, 8px, 0);
+  }
+  75% {
+    clip: rect(45px, 9999px, 101px, 0);
+  }
+  80% {
+    clip: rect(87px, 9999px, 23px, 0);
+  }
+  85% {
+    clip: rect(12px, 9999px, 78px, 0);
+  }
+  90% {
+    clip: rect(99px, 9999px, 56px, 0);
+  }
+  95% {
+    clip: rect(33px, 9999px, 112px, 0);
+  }
+  100% {
+    clip: rect(70px, 9999px, 39px, 0);
+  }
+}
+
+@keyframes glitch-anim-2 {
+  0% {
+    clip: rect(65px, 9999px, 119px, 0);
+  }
+  5% {
+    clip: rect(28px, 9999px, 94px, 0);
+  }
+  10% {
+    clip: rect(107px, 9999px, 16px, 0);
+  }
+  15% {
+    clip: rect(51px, 9999px, 73px, 0);
+  }
+  20% {
+    clip: rect(89px, 9999px, 35px, 0);
+  }
+  25% {
+    clip: rect(14px, 9999px, 102px, 0);
+  }
+  30% {
+    clip: rect(76px, 9999px, 48px, 0);
+  }
+  35% {
+    clip: rect(118px, 9999px, 21px, 0);
+  }
+  40% {
+    clip: rect(37px, 9999px, 85px, 0);
+  }
+  45% {
+    clip: rect(96px, 9999px, 59px, 0);
+  }
+  50% {
+    clip: rect(22px, 9999px, 111px, 0);
+  }
+  55% {
+    clip: rect(68px, 9999px, 43px, 0);
+  }
+  60% {
+    clip: rect(125px, 9999px, 7px, 0);
+  }
+  65% {
+    clip: rect(54px, 9999px, 80px, 0);
+  }
+  70% {
+    clip: rect(11px, 9999px, 98px, 0);
+  }
+  75% {
+    clip: rect(83px, 9999px, 27px, 0);
+  }
+  80% {
+    clip: rect(46px, 9999px, 105px, 0);
+  }
+  85% {
+    clip: rect(92px, 9999px, 62px, 0);
+  }
+  90% {
+    clip: rect(19px, 9999px, 116px, 0);
+  }
+  95% {
+    clip: rect(71px, 9999px, 38px, 0);
+  }
+  100% {
+    clip: rect(104px, 9999px, 14px, 0);
+  }
+}
+
+/* Lighter glitch variant - for less aggressive effect */
+.glitch-subtle {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-subtle:hover::before,
+.glitch-subtle:hover::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+}
+
+.glitch-subtle:hover::before {
+  left: 1px;
+  text-shadow: -1px 0 var(--color-accent-cyan);
+  animation: glitch-subtle-anim 0.3s ease-out;
+}
+
+.glitch-subtle:hover::after {
+  left: -1px;
+  text-shadow: 1px 0 var(--color-accent-green);
+  animation: glitch-subtle-anim 0.3s ease-out reverse;
+}
+
+@keyframes glitch-subtle-anim {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Usage: Add 'glitch' or 'glitch-subtle' class and data-text attribute to heading
+   Example: <h1 class="glitch" data-text="Your Text">Your Text</h1>
+*/

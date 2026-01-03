@@ -1,0 +1,542 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroCard from '../components/HeroCard.astro';
+import ArticleListItemWide from '../components/ArticleListItemWide.astro';
+import WebSiteSchema from '../components/WebSiteSchema.astro';
+import { getCollection } from 'astro:content';
+
+// Get all blog posts, sorted by date (newest first)
+const posts = (await getCollection('blog', ({ data }) => {
+  return data.draft !== true;
+})).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Calculate reading time for each post
+function getReadingTime(content: string): string {
+  const words = content.split(/\s+/).length;
+  const minutes = Math.ceil(words / 200);
+  return `${minutes} min read`;
+}
+
+// Separate featured post (most recent) from others
+const [featuredPost, ...otherPosts] = posts;
+---
+
+<BaseLayout title="Blog" description="Cybersecurity articles, threat intelligence, and security research by moex0">
+  <!-- JSON-LD Structured Data -->
+  <WebSiteSchema slot="head" />
+
+  <!-- Boot Sequence Overlay (first visit only) -->
+  <div id="boot-sequence" class="boot-overlay" aria-hidden="true">
+    <div class="boot-terminal">
+      <div class="boot-line" data-delay="0">
+        <span class="boot-prompt">[*]</span> Initializing moex0.blog<span class="boot-dots">...</span>
+      </div>
+      <div class="boot-line" data-delay="400">
+        <span class="boot-prompt">[+]</span> Loading threat intelligence modules<span class="boot-dots">...</span> <span class="boot-ok">[OK]</span>
+      </div>
+      <div class="boot-line" data-delay="800">
+        <span class="boot-prompt">[+]</span> Establishing secure connection<span class="boot-dots">...</span> <span class="boot-ok">[OK]</span>
+      </div>
+      <div class="boot-line" data-delay="1200">
+        <span class="boot-prompt">[+]</span> Decrypting content<span class="boot-dots">...</span> <span class="boot-ok">[OK]</span>
+      </div>
+      <div class="boot-line boot-ready" data-delay="1600">
+        <span class="boot-prompt">[*]</span> System ready. Welcome, operator.
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <!-- Glitch title with typing effect -->
+      <h1 class="hero-title" data-text="~/moex0">
+        <span class="hero-prefix">~/</span><span class="hero-name">moex0</span><span class="hero-cursor">_</span>
+      </h1>
+      <p class="hero-description">
+        Cybersecurity researcher & threat intelligence analyst. Writing about APT groups, malware analysis, vulnerability research, and defensive security.
+      </p>
+      
+      <!-- Subtle scanline effect -->
+      <div class="scanline" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Blog Posts -->
+  <section class="articles-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-prompt">$</span> ls ./articles
+      </h2>
+      <span class="section-count">{posts.length} articles</span>
+    </div>
+
+    {posts.length === 0 ? (
+      <div class="empty-state">
+        <p class="empty-text">
+          <span class="empty-prompt">$</span> No articles yet. Check back soon!
+        </p>
+      </div>
+    ) : (
+      <div class="articles-container">
+        {/* Hero: Latest/Featured post */}
+        {featuredPost && (
+          <HeroCard
+            title={featuredPost.data.title}
+            description={featuredPost.data.description}
+            pubDate={featuredPost.data.pubDate}
+            updatedDate={featuredPost.data.updatedDate}
+            slug={featuredPost.slug}
+            tags={featuredPost.data.tags}
+            readingTime={getReadingTime(featuredPost.body || '')}
+            image={featuredPost.data.image}
+          />
+        )}
+
+        {/* Previous Articles List */}
+        {otherPosts.length > 0 && (
+          <div class="previous-articles">
+            <h3 class="previous-articles-header">
+              <span class="header-line"></span>
+              <span class="header-text">Previous Articles</span>
+              <span class="header-line"></span>
+            </h3>
+            
+            <div class="articles-list">
+              {otherPosts.map((post) => (
+                <ArticleListItemWide
+                  title={post.data.title}
+                  description={post.data.description}
+                  pubDate={post.data.pubDate}
+                  updatedDate={post.data.updatedDate}
+                  slug={post.slug}
+                  tags={post.data.tags}
+                  readingTime={getReadingTime(post.body || '')}
+                  image={post.data.image}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </section>
+</BaseLayout>
+
+<script>
+  function initBootSequence() {
+    const bootOverlay = document.getElementById('boot-sequence');
+    if (!bootOverlay) return;
+
+    // Show boot sequence
+    bootOverlay.style.display = 'flex';
+    bootOverlay.setAttribute('aria-hidden', 'false');
+
+    const lines = bootOverlay.querySelectorAll('.boot-line');
+
+    lines.forEach((line) => {
+      const delay = parseInt(line.getAttribute('data-delay') || '0');
+      setTimeout(() => {
+        line.classList.add('visible');
+      }, delay);
+    });
+
+    // Fade out after animation completes
+    setTimeout(() => {
+      bootOverlay.classList.add('fade-out');
+
+      setTimeout(() => {
+        bootOverlay.remove();
+      }, 500);
+    }, 2200);
+  }
+
+  // Glitch effect on hover
+  function initGlitchEffect() {
+    const heroTitle = document.querySelector('.hero-title');
+    if (!heroTitle) return;
+
+    let glitchInterval: ReturnType<typeof setInterval> | null = null;
+
+    heroTitle.addEventListener('mouseenter', () => {
+      heroTitle.classList.add('glitch-active');
+
+      // Random glitch pulses
+      glitchInterval = setInterval(() => {
+        heroTitle.classList.add('glitch-pulse');
+        setTimeout(() => heroTitle.classList.remove('glitch-pulse'), 100);
+      }, 2000);
+    });
+
+    heroTitle.addEventListener('mouseleave', () => {
+      heroTitle.classList.remove('glitch-active', 'glitch-pulse');
+      if (glitchInterval) {
+        clearInterval(glitchInterval);
+        glitchInterval = null;
+      }
+    });
+  }
+
+  // Initialize
+  initBootSequence();
+  initGlitchEffect();
+
+  // Re-initialize on view transitions
+  document.addEventListener('astro:after-swap', () => {
+    initGlitchEffect();
+    // Don't re-run boot sequence on navigation
+  });
+</script>
+
+<style>
+  /* ========================================
+     Hero Section with Glitch Effects
+     ======================================== */
+  .hero-section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-content {
+    max-width: 42rem;
+    position: relative;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+    position: relative;
+    display: inline-block;
+    cursor: default;
+  }
+
+  @media (min-width: 768px) {
+    .hero-title {
+      font-size: 3rem;
+    }
+  }
+
+  .hero-prefix {
+    color: var(--color-accent-green);
+    font-family: var(--font-mono);
+  }
+
+  .hero-name {
+    position: relative;
+  }
+
+  .hero-cursor {
+    color: var(--color-accent-cyan);
+    font-family: var(--font-mono);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Glitch effect */
+  .hero-title.glitch-active {
+    animation: glitch-skew 4s infinite linear alternate-reverse;
+  }
+
+  .hero-title.glitch-active::before,
+  .hero-title.glitch-active::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+  }
+
+  .hero-title.glitch-active::before {
+    color: var(--color-accent-cyan);
+    animation: glitch-1 0.3s infinite linear alternate-reverse;
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+    transform: translate(-2px);
+  }
+
+  .hero-title.glitch-active::after {
+    color: var(--color-accent-green);
+    animation: glitch-2 0.3s infinite linear alternate-reverse;
+    clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+    transform: translate(2px);
+  }
+
+  .hero-title.glitch-pulse {
+    animation: glitch-flash 0.1s linear;
+  }
+
+  @keyframes glitch-1 {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(-2px, -1px); }
+    60% { transform: translate(2px, 1px); }
+    80% { transform: translate(2px, -1px); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes glitch-2 {
+    0% { transform: translate(0); }
+    20% { transform: translate(2px, -1px); }
+    40% { transform: translate(2px, 1px); }
+    60% { transform: translate(-2px, -1px); }
+    80% { transform: translate(-2px, 1px); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes glitch-skew {
+    0% { transform: skew(0deg); }
+    10% { transform: skew(0.5deg); }
+    20% { transform: skew(-0.5deg); }
+    30% { transform: skew(0deg); }
+    100% { transform: skew(0deg); }
+  }
+
+  @keyframes glitch-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Scanline effect (very subtle) */
+  .scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.1) 2px,
+      rgba(0, 255, 0, 0.1) 4px
+    );
+    z-index: 1;
+  }
+
+  .hero-description {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    margin: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ========================================
+     Articles Section
+     ======================================== */
+  .articles-section {
+    /* spacing handled by grid */
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  .section-prompt {
+    color: var(--color-accent-green);
+  }
+
+  .section-count {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Articles Container */
+  .articles-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  /* Previous Articles Section */
+  .previous-articles {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .previous-articles-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+
+  .header-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .header-text {
+    white-space: nowrap;
+  }
+
+  .articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Staggered fade-in animation for article cards */
+  .articles-list > :global(*) {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeSlideUp 0.4s ease-out forwards;
+  }
+
+  .articles-list > :global(*:nth-child(1)) { animation-delay: 0.1s; }
+  .articles-list > :global(*:nth-child(2)) { animation-delay: 0.15s; }
+  .articles-list > :global(*:nth-child(3)) { animation-delay: 0.2s; }
+  .articles-list > :global(*:nth-child(4)) { animation-delay: 0.25s; }
+  .articles-list > :global(*:nth-child(5)) { animation-delay: 0.3s; }
+  .articles-list > :global(*:nth-child(6)) { animation-delay: 0.35s; }
+  .articles-list > :global(*:nth-child(7)) { animation-delay: 0.4s; }
+  .articles-list > :global(*:nth-child(8)) { animation-delay: 0.45s; }
+  .articles-list > :global(*:nth-child(n+9)) { animation-delay: 0.5s; }
+
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 0.75rem;
+  }
+
+  .empty-text {
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .empty-prompt {
+    color: var(--color-accent-green);
+  }
+
+  /* ========================================
+     Reduced Motion
+     ======================================== */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-cursor {
+      animation: none;
+      opacity: 1;
+    }
+
+    .hero-title.glitch-active,
+    .hero-title.glitch-active::before,
+    .hero-title.glitch-active::after {
+      animation: none;
+    }
+
+    .scanline {
+      display: none;
+    }
+
+    .articles-list > :global(*) {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+
+  /* ========================================
+     Boot Sequence Overlay
+     ======================================== */
+  .boot-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--color-bg-primary);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.5s ease;
+  }
+
+  .boot-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .boot-terminal {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.8;
+    max-width: 500px;
+    padding: 2rem;
+  }
+
+  .boot-line {
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .boot-line.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .boot-prompt {
+    color: var(--color-accent-cyan);
+  }
+
+  .boot-dots {
+    color: var(--color-text-muted);
+  }
+
+  .boot-ok {
+    color: var(--color-accent-green);
+    font-weight: 600;
+  }
+
+  .boot-ready {
+    color: var(--color-accent-green);
+    margin-top: 0.5rem;
+  }
+
+</style>

@@ -1,0 +1,442 @@
+---
+// Search Modal - Terminal-style search with Pagefind full-text search
+---
+
+<div id="search-modal" class="search-modal" aria-hidden="true">
+  <div class="search-backdrop"></div>
+  <div class="search-container">
+    <div class="search-header">
+      <span class="search-prompt"><span class="text-[--color-accent-green]">$</span> search ./articles</span>
+      <button class="search-close" aria-label="Close search">
+        <kbd>ESC</kbd>
+      </button>
+    </div>
+    <div class="search-input-wrapper">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Type to search articles..."
+        autocomplete="off"
+      />
+      <span id="search-loading" class="search-loading hidden">Searching...</span>
+    </div>
+    <div id="search-results" class="search-results">
+      <div class="search-hint">
+        <span class="text-[--color-text-muted]">Press</span>
+        <kbd>↑</kbd><kbd>↓</kbd>
+        <span class="text-[--color-text-muted]">to navigate</span>
+        <kbd>Enter</kbd>
+        <span class="text-[--color-text-muted]">to select</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .search-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+  }
+
+  .search-modal[aria-hidden="false"] {
+    display: flex;
+  }
+
+  .search-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 1rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+
+  .search-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-tertiary);
+  }
+
+  .search-prompt {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+  }
+
+  .search-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .search-close kbd {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+  }
+
+  .search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--color-text-primary);
+  }
+
+  .search-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .search-loading {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-accent-cyan);
+  }
+
+  .search-loading.hidden {
+    display: none;
+  }
+
+  .search-results {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+
+  .search-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+
+  .search-hint kbd {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+  }
+
+  .search-result {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .search-result:hover,
+  .search-result.active {
+    background: var(--color-bg-tertiary);
+  }
+
+  .search-result-title {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .search-result.active .search-result-title {
+    color: var(--color-accent-cyan);
+  }
+
+  .search-result-excerpt {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  .search-result-excerpt mark {
+    background: var(--color-accent-cyan);
+    color: var(--color-bg-primary);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  .search-no-results {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+  }
+
+</style>
+
+<script is:inline>
+  let pagefind = null;
+  let activeIndex = 0;
+  let searchTimeout = null;
+
+  async function loadPagefind() {
+    if (pagefind) return pagefind;
+    try {
+      // Load Pagefind dynamically at runtime
+      pagefind = await import('/pagefind/pagefind.js');
+      await pagefind.init();
+      return pagefind;
+    } catch (error) {
+      console.error('Failed to load Pagefind:', error);
+      return null;
+    }
+  }
+
+  function openSearch() {
+    const modal = document.getElementById('search-modal');
+    const input = document.getElementById('search-input');
+    if (modal && input) {
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      loadPagefind();
+      input.focus();
+    }
+  }
+
+  function closeSearch() {
+    const modal = document.getElementById('search-modal');
+    const input = document.getElementById('search-input');
+    const results = document.getElementById('search-results');
+    if (modal && input && results) {
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      input.value = '';
+      results.innerHTML = `
+        <div class="search-hint">
+          <span class="text-[--color-text-muted]">Press</span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+          <span class="text-[--color-text-muted]">to navigate</span>
+          <kbd>Enter</kbd>
+          <span class="text-[--color-text-muted]">to select</span>
+        </div>
+      `;
+      activeIndex = 0;
+    }
+  }
+
+  async function search(query) {
+    const results = document.getElementById('search-results');
+    const loading = document.getElementById('search-loading');
+    if (!results) return;
+
+    if (!query.trim()) {
+      results.innerHTML = `
+        <div class="search-hint">
+          <span class="text-[--color-text-muted]">Press</span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+          <span class="text-[--color-text-muted]">to navigate</span>
+          <kbd>Enter</kbd>
+          <span class="text-[--color-text-muted]">to select</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Item 16: Show skeleton loading state while searching
+    if (loading) loading.classList.remove('hidden');
+    results.innerHTML = `
+      <div class="search-skeleton" style="padding: 1rem;">
+        <div class="skeleton-line w-3-4"></div>
+        <div class="skeleton-line w-1-2"></div>
+        <div class="skeleton-line w-full"></div>
+        <div class="skeleton-line w-3-4"></div>
+      </div>
+    `;
+
+    const pf = await loadPagefind();
+    if (!pf) {
+      if (loading) loading.classList.add('hidden');
+      results.innerHTML = `
+        <div class="search-no-results">
+          <p>Search unavailable</p>
+          <p class="text-xs mt-2">Run 'npm run build' to generate search index</p>
+        </div>
+      `;
+      return;
+    }
+
+    const searchResults = await pf.search(query);
+    if (loading) loading.classList.add('hidden');
+
+    activeIndex = 0;
+
+    if (searchResults.results.length === 0) {
+      results.innerHTML = `
+        <div class="search-no-results">
+          <p>$ grep "${query}" ./articles</p>
+          <p>No matches found</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Get detailed data for each result
+    const detailedResults = await Promise.all(
+      searchResults.results.slice(0, 10).map(async (result) => {
+        const data = await result.data();
+        return data;
+      })
+    );
+
+    results.innerHTML = detailedResults.map((result, index) => `
+      <a href="${result.url}" class="search-result ${index === 0 ? 'active' : ''}" data-index="${index}">
+        <div class="search-result-title">${result.meta?.title || 'Untitled'}</div>
+        <div class="search-result-excerpt">${result.excerpt || ''}</div>
+      </a>
+    `).join('');
+  }
+
+  function navigateResults(direction) {
+    const results = document.querySelectorAll('.search-result');
+    if (results.length === 0) return;
+
+    if (results[activeIndex]) results[activeIndex].classList.remove('active');
+
+    if (direction === 'down') {
+      activeIndex = (activeIndex + 1) % results.length;
+    } else {
+      activeIndex = (activeIndex - 1 + results.length) % results.length;
+    }
+
+    if (results[activeIndex]) {
+      results[activeIndex].classList.add('active');
+      results[activeIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function selectResult() {
+    const activeResult = document.querySelector('.search-result.active');
+    if (activeResult) {
+      window.location.href = activeResult.href;
+    }
+  }
+
+  function initSearch() {
+    // Focus trap for search modal
+    const modal = document.getElementById('search-modal');
+    if (modal) {
+      modal.addEventListener('keydown', (e) => {
+        if (modal.getAttribute('aria-hidden') === 'true') return;
+        if (e.key !== 'Tab') return;
+
+        const focusableElements = modal.querySelectorAll('button, input, a[href]');
+        const focusable = Array.from(focusableElements);
+        const firstFocusable = focusable[0];
+        const lastFocusable = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      });
+    }
+
+    // Keyboard shortcut (Cmd/Ctrl + K)
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearch();
+      }
+
+      if (e.key === 'Escape') {
+        closeSearch();
+      }
+    });
+
+    // Search input with debounce
+    const input = document.getElementById('search-input');
+    if (input) {
+      input.addEventListener('input', (e) => {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          search(e.target.value);
+        }, 150);
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateResults('down');
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateResults('up');
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          selectResult();
+        }
+      });
+    }
+
+    // Close button
+    const closeBtn = document.querySelector('.search-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+
+    // Backdrop click
+    const backdrop = document.querySelector('.search-backdrop');
+    if (backdrop) backdrop.addEventListener('click', closeSearch);
+
+    // Expose openSearch globally for the header button
+    window.openSearch = openSearch;
+  }
+
+  // Initialize on page load
+  initSearch();
+
+  // Re-initialize on Astro view transitions
+  document.addEventListener('astro:after-swap', initSearch);
+
+  // Close search modal before page swap during view transitions
+  document.addEventListener('astro:before-swap', closeSearch);
+</script>

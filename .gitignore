@@ -1,0 +1,45 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# Development/planning docs
+Auto Run Docs/
+PLAN.md
+.claude/
+
+# Session files
+session-*.md
+blog-design.md
+
+# Development pages and features
+src/pages/__preview/
+src/pages/compare/
+src/pages/compare.astro
+src/pages/features.astro
+
+# Documentation files
+FEATURES.md
+IMPLEMENTATION_SUMMARY*.md
+VALIDATION_CHECKLIST.md
+docs/
