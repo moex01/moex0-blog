@@ -1,14 +1,21 @@
 ---
 // Reading Progress Bar - Shows how far through the article the reader is
 // Title bar appears when scrolling up, hides when scrolling down
+// CHANGE: Added readingTime prop to conditionally show only on long-form posts (>=5 min)
 interface Props {
   title?: string;
+  readingTime?: number;
 }
 
-const { title } = Astro.props;
+const { title, readingTime = 0 } = Astro.props;
+
+// CHANGE: Only render the progress bar for articles with 5+ minutes reading time
+const shouldShowProgress = readingTime >= 5;
 ---
 
 <!-- Title bar that appears on scroll -->
+<!-- CHANGE: Only render if reading time >= 5 minutes -->
+{shouldShowProgress && (
 <div id="reading-title-bar" class="reading-title-bar" aria-hidden="true" data-title={title}>
   <div class="reading-title-bar-content">
     <span class="reading-title-text"></span>
@@ -16,16 +23,23 @@ const { title } = Astro.props;
   </div>
   <div id="reading-progress" class="reading-progress-bar"></div>
 </div>
+)}
 
 <style>
   .reading-title-bar {
+    --progress-track-height: 3px;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 9999; /* Above everything except the progress line */
-    background: var(--color-bg-primary);
-    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-bg-primary);
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(100% - var(--progress-track-height)),
+      color-mix(in srgb, var(--color-border) 60%, transparent) calc(100% - var(--progress-track-height)),
+      color-mix(in srgb, var(--color-border) 60%, transparent) 100%
+    );
     transform: translateY(-100%);
     transition: transform 0.3s ease-out, opacity 0.3s ease-out;
     opacity: 0;
@@ -76,10 +90,11 @@ const { title } = Astro.props;
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 2px;
+    height: var(--progress-track-height);
     background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-green));
     width: 0%;
     transition: width 0.1s ease-out;
+    z-index: 1;
   }
 
 </style>

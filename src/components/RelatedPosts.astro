@@ -48,14 +48,14 @@ function formatDate(date: Date): string {
 ---
 
 {relatedPosts.length > 0 && (
-  <section class="related-posts">
+  <section class="related-posts console-panel">
     <h3 class="related-title">
       <span class="text-[--color-accent-green]">$</span> ls ./related
     </h3>
 
     <div class="related-grid">
       {relatedPosts.map(post => (
-        <a href={`/blog/${post.slug}`} class="related-card">
+        <a href={`/articles/${post.slug}`} class="related-card">
           <span class="related-date">{formatDate(post.data.pubDate)}</span>
           <h4 class="related-post-title">{post.data.title}</h4>
           {post.data.tags && post.data.tags.length > 0 && (

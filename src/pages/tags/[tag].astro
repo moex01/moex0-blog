@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ArticleCard from '../../components/ArticleCard.astro';
+import ArticleListItemWide from '../../components/ArticleListItemWide.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -52,9 +52,9 @@ function getReadingTime(content: string): string {
       </p>
     </header>
 
-    <div class="grid gap-6">
+    <div class="articles-list">
       {sortedPosts.map((post) => (
-        <ArticleCard
+        <ArticleListItemWide
           title={post.data.title}
           description={post.data.description}
           pubDate={post.data.pubDate}
@@ -62,9 +62,54 @@ function getReadingTime(content: string): string {
           slug={post.slug}
           tags={post.data.tags}
           readingTime={getReadingTime(post.body || '')}
+          image={post.data.image}
         />
       ))}
     </div>
   </section>
 </BaseLayout>
 
+<style>
+  .articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Staggered fade-in animation for article cards */
+  .articles-list > :global(*) {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeSlideUp 0.4s ease-out forwards;
+  }
+
+  .articles-list > :global(*:nth-child(1)) { animation-delay: 0.1s; }
+  .articles-list > :global(*:nth-child(2)) { animation-delay: 0.15s; }
+  .articles-list > :global(*:nth-child(3)) { animation-delay: 0.2s; }
+  .articles-list > :global(*:nth-child(4)) { animation-delay: 0.25s; }
+  .articles-list > :global(*:nth-child(5)) { animation-delay: 0.3s; }
+  .articles-list > :global(*:nth-child(6)) { animation-delay: 0.35s; }
+  .articles-list > :global(*:nth-child(7)) { animation-delay: 0.4s; }
+  .articles-list > :global(*:nth-child(8)) { animation-delay: 0.45s; }
+  .articles-list > :global(*:nth-child(n+9)) { animation-delay: 0.5s; }
+
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .articles-list > :global(*) {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+</style>

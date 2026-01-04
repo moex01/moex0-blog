@@ -17,10 +17,15 @@
     opacity: 0.07;
   }
 
+  /* Hide matrix rain when low-effects mode is enabled */
   @media (prefers-reduced-motion: reduce) {
     #matrix-canvas {
       display: none;
     }
+  }
+
+  :global(.low-effects) #matrix-canvas {
+    display: none;
   }
 
   :global(.light) #matrix-canvas {
@@ -29,12 +34,23 @@
 </style>
 
 <script>
+  // PERFORMANCE OPTIMIZATION: Track initialization state to prevent duplicate setups
+  let isInitialized = false;
+  
   function initMatrix() {
     const canvas = document.getElementById('matrix-canvas') as HTMLCanvasElement;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Check if low-effects mode is enabled
+    function isLowEffectsEnabled(): boolean {
+      return document.documentElement.classList.contains('low-effects');
+    }
+
+    // Animation frame ID for cleanup
+    let animationId: number | null = null;
 
     // Set canvas size
     function resize() {
@@ -90,7 +106,16 @@
     const interval = 1000 / fps;
 
     function animate(currentTime: number) {
-      requestAnimationFrame(animate);
+      // Stop animation if low-effects mode is enabled
+      if (isLowEffectsEnabled()) {
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        return;
+      }
+
+      animationId = requestAnimationFrame(animate);
 
       const delta = currentTime - lastTime;
       if (delta < interval) return;
@@ -99,12 +124,93 @@
       draw();
     }
 
-    requestAnimationFrame(animate);
+    // Start animation if low-effects is not enabled
+    if (!isLowEffectsEnabled()) {
+      requestAnimationFrame(animate);
+    }
+
+    // Listen for low-effects toggle events
+    window.addEventListener('low-effects-change', (event: Event) => {
+      const customEvent = event as CustomEvent<{ enabled: boolean }>;
+      if (customEvent.detail.enabled) {
+        // Stop animation
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      } else {
+        // Restart animation
+        if (animationId === null) {
+          requestAnimationFrame(animate);
+        }
+      }
+    });
+    
+    // Mark as initialized
+    isInitialized = true;
   }
 
-  // Initialize on page load
-  initMatrix();
+  // PERFORMANCE OPTIMIZATION: Defer initialization until after critical content loads
+  // This ensures the main content is interactive before starting expensive animations
+  function deferredInit() {
+    // Prevent duplicate initialization
+    if (isInitialized) return;
+    
+    const canvas = document.getElementById('matrix-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    // PERFORMANCE OPTIMIZATION: Use IntersectionObserver for lazy loading
+    // Only initialize the animation when the canvas area is visible or near viewport
+    // This is especially helpful for pages where users may never scroll to see the effect
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Start initialization when canvas is within 50% of viewport
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            // PERFORMANCE OPTIMIZATION: Use requestIdleCallback for non-blocking initialization
+            // Falls back to setTimeout if requestIdleCallback is not available
+            if ('requestIdleCallback' in window) {
+              requestIdleCallback(() => {
+                initMatrix();
+                observer.disconnect(); // Stop observing after initialization
+              }, { timeout: 2000 }); // Force execution after 2s if browser is busy
+            } else {
+              // Fallback for browsers without requestIdleCallback
+              setTimeout(() => {
+                initMatrix();
+                observer.disconnect();
+              }, 100);
+            }
+          }
+        });
+      },
+      {
+        // Start loading when canvas is within 50% of viewport height from being visible
+        rootMargin: '50% 0px',
+        threshold: 0
+      }
+    );
+    
+    observer.observe(canvas);
+  }
 
-  // Re-initialize on Astro page transitions
-  document.addEventListener('astro:after-swap', initMatrix);
+  // PERFORMANCE OPTIMIZATION: Wait for window.load event instead of immediate execution
+  // This ensures all critical resources (CSS, fonts, images) are loaded first
+  // DOMContentLoaded is too early - we want everything ready before starting animations
+  if (document.readyState === 'complete') {
+    // Page already loaded (e.g., during Astro transitions)
+    deferredInit();
+  } else {
+    // Wait for full page load including all resources
+    window.addEventListener('load', deferredInit);
+  }
+
+  // PERFORMANCE OPTIMIZATION: Re-initialize on Astro page transitions
+  // Reset initialization state to allow proper setup on new pages
+  document.addEventListener('astro:after-swap', () => {
+    isInitialized = false;
+    deferredInit();
+  });
 </script>

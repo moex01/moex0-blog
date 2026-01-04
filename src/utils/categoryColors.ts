@@ -47,34 +47,34 @@ export function getCategoryColor(tag: string | undefined): string {
 }
 
 // For ArticleLayout which needs both accent and background colors
-export const categoryColorsWithBg: Record<string, { accent: string; bg: string }> = {
-  'apt': { accent: 'var(--color-accent-red)', bg: 'rgba(239, 68, 68, 0.1)' },
-  'apt29': { accent: 'var(--color-accent-red)', bg: 'rgba(239, 68, 68, 0.1)' },
-  'malware': { accent: 'var(--color-accent-red)', bg: 'rgba(239, 68, 68, 0.1)' },
-  'ransomware': { accent: 'var(--color-accent-red)', bg: 'rgba(239, 68, 68, 0.1)' },
-  'threat-actor': { accent: 'var(--color-accent-red)', bg: 'rgba(239, 68, 68, 0.1)' },
-  'threat-intelligence': { accent: 'var(--color-accent-orange)', bg: 'rgba(251, 146, 60, 0.1)' },
-  'intelligence': { accent: 'var(--color-accent-orange)', bg: 'rgba(251, 146, 60, 0.1)' },
-  'vulnerability': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
-  'cve': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
-  'exploit': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
-  'dfir': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.1)' },
-  'forensics': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.1)' },
-  'incident-response': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.1)' },
-  'threat-hunting': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.1)' },
-  'detection': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.1)' },
-  'hunting': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.1)' },
-  'blue-team': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.1)' },
-  'defense': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.1)' },
-  'kerberos': { accent: 'var(--color-accent-purple)', bg: 'rgba(168, 85, 247, 0.1)' },
-  'authentication': { accent: 'var(--color-accent-purple)', bg: 'rgba(168, 85, 247, 0.1)' },
-  'research': { accent: 'var(--color-accent-purple)', bg: 'rgba(168, 85, 247, 0.1)' },
-  'writeup': { accent: 'var(--color-accent-purple)', bg: 'rgba(168, 85, 247, 0.1)' },
-  'active-directory': { accent: 'var(--color-accent-purple)', bg: 'rgba(168, 85, 247, 0.1)' },
-  'default': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.1)' }
+export const categoryColorsWithBg: Record<string, { accent: string; bg: string; border: string }> = {
+  'apt': { accent: 'var(--color-accent-red)', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)' },
+  'apt29': { accent: 'var(--color-accent-red)', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)' },
+  'malware': { accent: 'var(--color-accent-red)', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)' },
+  'ransomware': { accent: 'var(--color-accent-red)', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)' },
+  'threat-actor': { accent: 'var(--color-accent-red)', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.4)' },
+  'threat-intelligence': { accent: 'var(--color-accent-orange)', bg: 'rgba(251, 146, 60, 0.15)', border: 'rgba(251, 146, 60, 0.4)' },
+  'intelligence': { accent: 'var(--color-accent-orange)', bg: 'rgba(251, 146, 60, 0.15)', border: 'rgba(251, 146, 60, 0.4)' },
+  'vulnerability': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.4)' },
+  'cve': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.4)' },
+  'exploit': { accent: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.4)' },
+  'dfir': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' },
+  'forensics': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' },
+  'incident-response': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' },
+  'threat-hunting': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' },
+  'detection': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)' },
+  'hunting': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)' },
+  'blue-team': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)' },
+  'defense': { accent: 'var(--color-accent-green)', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.4)' },
+  'kerberos': { accent: 'var(--color-accent-purple)', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.4)' },
+  'authentication': { accent: 'var(--color-accent-purple)', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.4)' },
+  'research': { accent: 'var(--color-accent-purple)', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.4)' },
+  'writeup': { accent: 'var(--color-accent-purple)', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.4)' },
+  'active-directory': { accent: 'var(--color-accent-purple)', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.4)' },
+  'default': { accent: 'var(--color-accent-cyan)', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' }
 };
 
-export function getCategoryColorWithBg(tag: string | undefined): { accent: string; bg: string } {
+export function getCategoryColorWithBg(tag: string | undefined): { accent: string; bg: string; border: string } {
   if (!tag) return categoryColorsWithBg['default'];
   const normalizedTag = tag.toLowerCase();
   return categoryColorsWithBg[normalizedTag] || categoryColorsWithBg['default'];

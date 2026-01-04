@@ -44,7 +44,7 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-size: 1rem;
+  font-size: 1.0625rem; /* Typography improvement: Increased from 1rem (16px) to 1.0625rem (17px) for better readability */
   line-height: 1.7;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
@@ -63,6 +63,33 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: #f0f6fc; /* Typography improvement: Increased contrast for section headers (from #e6edf3 to #f0f6fc) */
+  margin-top: 2rem; /* Typography improvement: Added vertical spacing between sections */
+  margin-bottom: 1rem;
+}
+
+/* Adjust first heading to not have extra top margin */
+h1:first-child, h2:first-child, h3:first-child, 
+h4:first-child, h5:first-child, h6:first-child {
+  margin-top: 0;
+}
+
+/* Article metadata - Improved contrast */
+.article-meta,
+.post-meta,
+.metadata,
+[class*="meta"] {
+  color: #c9d1d9; /* Typography improvement: Increased contrast for metadata text (from #b0bac5 to #c9d1d9) */
+}
+
+/* Section spacing improvements */
+section {
+  margin-bottom: 3rem; /* Typography improvement: Increased vertical spacing between major sections */
+}
+
+.article-wrapper > * + *,
+.page-content > * + * {
+  margin-top: 1.5rem; /* Typography improvement: Better spacing between article elements */
 }
 
 /* Code blocks styling - Dual theme support */
@@ -116,8 +143,8 @@ a {
 }
 
 a:hover {
-  color: var(--color-accent-green);
-  text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+  color: var(--color-accent-cyan-bright);
+  text-shadow: 0 0 10px rgba(94, 234, 212, 0.35);
 }
 
 /* Selection */
@@ -605,6 +632,7 @@ pre code .line::before {
 
 /* ========================================
    Scanline Effect (subtle CRT feel)
+   Mobile-optimized to reduce battery impact
    ======================================== */
 .scanlines {
   pointer-events: none;
@@ -621,6 +649,21 @@ pre code .line::before {
   );
 }
 
+/* Mobile optimization: Soften or disable scanlines on mobile to reduce battery impact */
+@media (max-width: 768px) {
+  .scanlines {
+    opacity: 0.015; /* Reduced opacity on mobile */
+    will-change: auto; /* Remove performance hints that may increase battery usage */
+  }
+}
+
+/* Mobile optimization: On smaller devices, disable completely */
+@media (max-width: 480px) {
+  .scanlines {
+    display: none;
+  }
+}
+
 /* ========================================
    Glow Utilities - Softer, easier on eyes
    ======================================== */
@@ -635,6 +678,129 @@ pre code .line::before {
   text-shadow: 
     0 0 8px currentColor,
     0 0 16px rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   VISUAL POLISH ENHANCEMENTS
+   Grid overlays, glowing corners, console panels
+   ======================================== */
+
+/* Glowing corner accents for cards on hover */
+.glow-corners {
+  position: relative;
+  --corner-size: 20px;
+  --corner-border-width: 2px;
+  --corner-opacity: 1;
+  --corner-glow-size: 12px;
+  --corner-glow-strength: 40%;
+  --corner-inset-glow-size: 8px;
+  --corner-inset-glow-strength: 20%;
+}
+
+.glow-corners::before,
+.glow-corners::after {
+  content: '';
+  position: absolute;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.glow-corners::before {
+  top: -1px;
+  left: -1px;
+  border-top: var(--corner-border-width) solid var(--corner-color, var(--color-accent-cyan));
+  border-left: var(--corner-border-width) solid var(--corner-color, var(--color-accent-cyan));
+  box-shadow: 
+    -2px -2px var(--corner-glow-size) color-mix(in srgb, var(--corner-color, var(--color-accent-cyan)) var(--corner-glow-strength), transparent),
+    inset -1px -1px var(--corner-inset-glow-size) color-mix(in srgb, var(--corner-color, var(--color-accent-cyan)) var(--corner-inset-glow-strength), transparent);
+}
+
+.glow-corners::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: var(--corner-border-width) solid var(--corner-color, var(--color-accent-cyan));
+  border-right: var(--corner-border-width) solid var(--corner-color, var(--color-accent-cyan));
+  box-shadow: 
+    2px 2px var(--corner-glow-size) color-mix(in srgb, var(--corner-color, var(--color-accent-cyan)) var(--corner-glow-strength), transparent),
+    inset 1px 1px var(--corner-inset-glow-size) color-mix(in srgb, var(--corner-color, var(--color-accent-cyan)) var(--corner-inset-glow-strength), transparent);
+}
+
+.glow-corners:hover::before,
+.glow-corners:hover::after {
+  opacity: var(--corner-opacity, 1);
+}
+
+.glow-corners-soft {
+  --corner-size: 16px;
+  --corner-border-width: 1px;
+  --corner-opacity: 0.65;
+  --corner-glow-size: 8px;
+  --corner-glow-strength: 28%;
+  --corner-inset-glow-size: 6px;
+  --corner-inset-glow-strength: 14%;
+}
+
+/* Grid overlay backgrounds for sections/containers */
+.grid-overlay {
+  position: relative;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+}
+
+/* Stronger grid for emphasis */
+.grid-overlay-strong {
+  position: relative;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-position: -1px -1px;
+}
+
+/* Console panel border style */
+.console-panel {
+  position: relative;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.console-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent-cyan) 20%,
+    var(--color-accent-cyan) 80%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+/* Console panel with corner indicators */
+.console-panel-corners::after {
+  content: '[ SYSTEM ]';
+  position: absolute;
+  top: -1px;
+  left: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--color-accent-cyan);
+  background: var(--color-bg-secondary);
+  padding: 0 0.5rem;
+  letter-spacing: 0.1em;
 }
 
 /* ========================================
@@ -964,3 +1130,306 @@ html.light :focus-visible {
 /* Usage: Add 'glitch' or 'glitch-subtle' class and data-text attribute to heading
    Example: <h1 class="glitch" data-text="Your Text">Your Text</h1>
 */
+
+/* ========================================
+   LOW-EFFECTS MODE
+   Disable/reduce animations when enabled
+   ======================================== */
+
+/* Disable glitch effects */
+html.low-effects .glitch::before,
+html.low-effects .glitch::after,
+html.low-effects .glitch-subtle:hover::before,
+html.low-effects .glitch-subtle:hover::after {
+  display: none;
+}
+
+/* Disable scanlines */
+html.low-effects .scanlines {
+  display: none;
+}
+
+/* Disable glow effects */
+html.low-effects .glow-green,
+html.low-effects .glow-cyan,
+html.low-effects .glow-indigo {
+  text-shadow: none;
+}
+
+html.low-effects a:hover {
+  text-shadow: none;
+}
+
+/* Reduce neon effects */
+html.low-effects .neon-border {
+  box-shadow: 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+html.low-effects .neon-text {
+  text-shadow: none;
+}
+
+/* Disable shimmer animations */
+html.low-effects .header-progress-bar {
+  animation: none;
+  background: var(--color-accent-cyan);
+}
+
+html.low-effects .skeleton-line {
+  animation: none;
+}
+
+/* Disable pulse animation */
+html.low-effects .status-online::before {
+  animation: none;
+  box-shadow: 0 0 4px rgba(52, 211, 153, 0.4);
+}
+
+/* Reduce cursor blink */
+html.low-effects .cursor-blink {
+  animation: none;
+  opacity: 1;
+}
+
+/* Disable lightbox animations */
+html.low-effects .image-lightbox {
+  transition: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html.low-effects .image-lightbox img {
+  transition: none;
+  transform: scale(1);
+}
+
+html.low-effects .image-lightbox.active img {
+  transform: scale(1);
+}
+
+/* Disable hover transforms */
+html.low-effects .nav-link:hover {
+  transform: none;
+}
+
+html.low-effects .article-content img:hover {
+  transform: none;
+}
+
+/* Simplify mobile menu transitions */
+html.low-effects .mobile-menu {
+  transition: none;
+}
+
+/* Disable code copy button transitions */
+html.low-effects .code-copy-btn {
+  transition: none;
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   Reduce visual effects on mobile to save battery
+   ======================================== */
+
+/* Reduce or disable heavy effects on mobile devices */
+@media (max-width: 768px) {
+  /* Soften glow effects on mobile */
+  .glow-green {
+    text-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
+  }
+  
+  .glow-cyan {
+    text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+  }
+  
+  .glow-indigo {
+    text-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+  }
+  
+  /* Reduce link glow on mobile */
+  a:hover {
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+  }
+  
+  /* Disable corner glows on mobile - too subtle and battery intensive */
+  .glow-corners::before,
+  .glow-corners::after {
+    display: none;
+  }
+  
+  /* Simplify neon borders on mobile */
+  .neon-border {
+    box-shadow: 
+      0 0 4px rgba(56, 189, 248, 0.3),
+      0 0 12px rgba(56, 189, 248, 0.1);
+  }
+  
+  /* Reduce animation complexity */
+  .status-online::before {
+    animation-duration: 3s; /* Slower animation = less battery usage */
+  }
+  
+  /* Disable backdrop blur on older mobile devices (performance) */
+  @supports not (backdrop-filter: blur(8px)) {
+    .image-lightbox {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background-color: rgba(0, 0, 0, 0.98);
+    }
+  }
+}
+
+/* On touch devices, disable hover-only effects */
+@media (hover: none) {
+  .glow-corners:hover::before,
+  .glow-corners:hover::after {
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   VIEW TRANSITIONS
+   Page transition animations for demo comparison
+   ======================================== */
+
+/* OPTION A: Fade + Slide Transition */
+html.transition-fade-slide ::view-transition-old(root),
+html.transition-fade-slide ::view-transition-old(main-content) {
+  animation: fade-slide-out 0.25s ease-out forwards !important;
+}
+
+html.transition-fade-slide ::view-transition-new(root),
+html.transition-fade-slide ::view-transition-new(main-content) {
+  animation: fade-slide-in 0.3s ease-out forwards !important;
+}
+
+@keyframes fade-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* OPTION B: Terminal Effect Transition */
+html.transition-terminal ::view-transition-old(root),
+html.transition-terminal ::view-transition-old(main-content) {
+  animation: terminal-out 0.3s steps(4) forwards !important;
+}
+
+html.transition-terminal ::view-transition-new(root),
+html.transition-terminal ::view-transition-new(main-content) {
+  animation: terminal-in 0.35s steps(4) forwards !important;
+}
+
+@keyframes terminal-out {
+  0% {
+    opacity: 1;
+    filter: none;
+  }
+  25% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  50% {
+    opacity: 0.4;
+    filter: blur(2px) brightness(1.5);
+  }
+  75% {
+    opacity: 0.2;
+    clip-path: inset(0 0 50% 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+@keyframes terminal-in {
+  0% {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+  25% {
+    opacity: 0.2;
+    clip-path: inset(50% 0 0 0);
+  }
+  50% {
+    opacity: 0.4;
+    filter: blur(2px) brightness(1.5);
+  }
+  75% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+    clip-path: inset(0);
+  }
+}
+
+/* OPTION C: Morph Transition */
+html.transition-morph ::view-transition-old(root),
+html.transition-morph ::view-transition-old(main-content) {
+  animation: morph-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+html.transition-morph ::view-transition-new(root),
+html.transition-morph ::view-transition-new(main-content) {
+  animation: morph-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes morph-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes morph-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Disable transitions with reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  html.transition-fade-slide ::view-transition-old(root),
+  html.transition-fade-slide ::view-transition-old(main-content),
+  html.transition-fade-slide ::view-transition-new(root),
+  html.transition-fade-slide ::view-transition-new(main-content),
+  html.transition-terminal ::view-transition-old(root),
+  html.transition-terminal ::view-transition-old(main-content),
+  html.transition-terminal ::view-transition-new(root),
+  html.transition-terminal ::view-transition-new(main-content),
+  html.transition-morph ::view-transition-old(root),
+  html.transition-morph ::view-transition-old(main-content),
+  html.transition-morph ::view-transition-new(root),
+  html.transition-morph ::view-transition-new(main-content) {
+    animation: none !important;
+  }
+}

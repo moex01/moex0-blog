@@ -1,6 +1,4 @@
 ---
-import ThreatBadge from './ThreatBadge.astro';
-
 interface Props {
   title: string;
   description: string;
@@ -46,34 +44,28 @@ function getUpdatedAgo(updated: Date, published: Date): string | null {
 }
 
 const updatedAgo = updatedDate ? getUpdatedAgo(updatedDate, pubDate) : null;
-
-// Get primary category for threat badge
-const primaryCategory = tags?.[0];
 ---
 
-<article class="article-card group border border-[--color-border] rounded-lg p-6 hover:border-[--color-accent-cyan] bg-[--color-bg-secondary]">
-  <!-- Threat Badge and Date/Time -->
-  <div class="flex items-center justify-between gap-3 mb-3">
-    <div class="flex items-center gap-3 text-xs font-mono text-[--color-text-muted]">
-      <time datetime={pubDate.toISOString()}>{formattedDate}</time>
-      {readingTime && (
-        <>
-          <span class="text-[--color-border]">|</span>
-          <span>{readingTime}</span>
-        </>
-      )}
-      {updatedAgo && (
-        <>
-          <span class="text-[--color-border]">|</span>
-          <span class="text-[--color-accent-green]">{updatedAgo}</span>
-        </>
-      )}
-    </div>
-    {primaryCategory && <ThreatBadge category={primaryCategory} size="sm" />}
+<article class="article-card glow-corners glow-corners-soft group border border-[--color-border] rounded-lg p-6 hover:border-[--color-accent-cyan] bg-[--color-bg-secondary]" style="--corner-color: var(--color-accent-cyan);">
+  <!-- Date/Time Metadata -->
+  <div class="flex items-center gap-3 text-xs font-mono text-[--color-text-muted] mb-3">
+    <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+    {readingTime && (
+      <>
+        <span class="text-[--color-border]">|</span>
+        <span>{readingTime}</span>
+      </>
+    )}
+    {updatedAgo && (
+      <>
+        <span class="text-[--color-border]">|</span>
+        <span class="text-[--color-accent-green]">{updatedAgo}</span>
+      </>
+    )}
   </div>
 
   <!-- Title -->
-  <a href={`/blog/${slug}`} class="block">
+  <a href={`/articles/${slug}`} class="block">
     <h2 class="text-xl font-semibold text-[--color-text-primary] group-hover:text-[--color-accent-cyan] transition-colors mb-2" transition:name={`article-title-${slug}`}>
       {title}
     </h2>
@@ -108,5 +100,13 @@ const primaryCategory = tags?.[0];
   .article-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Mobile optimization: Reduce lift effect on mobile */
+  @media (max-width: 768px) {
+    .article-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
   }
 </style>

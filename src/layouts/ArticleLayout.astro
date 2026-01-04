@@ -33,14 +33,6 @@ const content = post.body || '';
 const words = content.split(/\s+/).length;
 const readingTime = Math.ceil(words / 200);
 
-// Get next/previous posts
-const sortedPosts = allPosts
-  .filter(p => !p.data.draft)
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const currentIndex = sortedPosts.findIndex(p => p.slug === post.slug);
-const prevPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
-const nextPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
-
 const formattedPubDate = pubDate.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
@@ -70,7 +62,8 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   />
 
   <!-- Reading Progress Bar with Title -->
-  <ReadingProgress title={title} />
+  <!-- CHANGE: Pass readingTime prop to conditionally show progress bar on long-form posts only -->
+  <ReadingProgress title={title} readingTime={readingTime} />
 
   <!-- Breadcrumbs -->
   <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -167,27 +160,6 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
     <!-- Related Posts -->
     <RelatedPosts currentPost={post} allPosts={allPosts} />
   </article>
-
-  <!-- Post Navigation -->
-  <nav class="post-nav">
-    {prevPost ? (
-      <a href={`/blog/${prevPost.slug}`} class="post-nav-link">
-        <span class="post-nav-cmd"><span class="text-[--color-accent-green]">$</span> cd ../prev</span>
-        <span class="post-nav-title">{prevPost.data.title}</span>
-      </a>
-    ) : (
-      <a href="/" class="post-nav-link">
-        <span class="post-nav-cmd"><span class="text-[--color-accent-green]">$</span> cd ~/blog</span>
-        <span class="post-nav-title">All Posts</span>
-      </a>
-    )}
-    {nextPost && (
-      <a href={`/blog/${nextPost.slug}`} class="post-nav-link post-nav-next">
-        <span class="post-nav-cmd"><span class="text-[--color-accent-green]">$</span> cd ../next</span>
-        <span class="post-nav-title">{nextPost.data.title}</span>
-      </a>
-    )}
-  </nav>
 
   <!-- Back to Top Button -->
   <BackToTop />
@@ -783,7 +755,7 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
     gap: 0.5rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
     margin-bottom: 1rem;
   }
 
@@ -809,13 +781,13 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   }
 
   .article-meta-divider {
-    color: var(--color-border);
+    color: var(--color-border-hover);
   }
 
   .article-date,
   .article-reading-time,
   .article-updated {
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
   }
 
   /* Title */
@@ -861,12 +833,12 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   .article-tag {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     padding: 0.25rem 0.625rem;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0.25rem;
     transition: all 0.2s ease;
   }
@@ -883,7 +855,7 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   }
 
   html.light .article-meta-row {
-    color: var(--color-text-muted-light);
+    color: var(--color-text-secondary-light);
   }
 
   html.light .article-category {
@@ -903,7 +875,7 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   html.light .article-date,
   html.light .article-reading-time,
   html.light .article-updated {
-    color: var(--color-text-muted-light);
+    color: var(--color-text-secondary-light);
   }
 
   html.light .article-title {
@@ -915,98 +887,13 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   }
 
   html.light .article-tag {
-    color: var(--color-text-secondary-light);
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.08);
+    color: var(--color-text-primary-light);
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.12);
   }
 
   html.light .article-tag:hover {
     background: rgba(0, 0, 0, 0.06);
-  }
-
-  /* ========================================
-     Post Navigation - Terminal themed
-     ======================================== */
-  .post-nav {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-border);
-    max-width: 48rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .post-nav-link {
-    display: block;
-    padding: 1rem 1.25rem;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    min-width: 0;
-    flex: 1;
-    max-width: calc(50% - 0.5rem);
-  }
-
-  .post-nav-link:hover {
-    border-color: var(--color-accent-cyan);
-  }
-
-  .post-nav-link.post-nav-next {
-    text-align: right;
-    margin-left: auto;
-  }
-
-  .post-nav-cmd {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    color: var(--color-text-muted);
-    margin-bottom: 0.375rem;
-  }
-
-  .post-nav-title {
-    display: block;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    font-size: 0.875rem;
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .post-nav-link:hover .post-nav-title {
-    color: var(--color-accent-cyan);
-  }
-
-  html.light .post-nav {
-    border-color: var(--color-border-light);
-  }
-
-  html.light .post-nav-link {
-    background: var(--color-bg-secondary-light);
-    border-color: var(--color-border-light);
-  }
-
-  html.light .post-nav-link:hover {
-    border-color: #0969da;
-  }
-
-  html.light .post-nav-cmd {
-    color: var(--color-text-muted-light);
-  }
-
-  html.light .post-nav-title {
-    color: var(--color-text-primary-light);
-  }
-
-  html.light .post-nav-link:hover .post-nav-title {
-    color: #0969da;
   }
 
   /* Article wrapper - constrains content width */
@@ -1042,7 +929,7 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   .article-content h4 {
     font-size: 1.125rem;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     line-height: 1.5;
@@ -1051,15 +938,28 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   }
 
   .article-content p {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     line-height: 1.8;
     margin-bottom: 1.25rem;
     font-size: 1.0625rem;
   }
 
+  .article-content a {
+    color: var(--color-accent-cyan);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-accent-cyan) 55%, transparent);
+    text-underline-offset: 2px;
+  }
+
+  .article-content a:hover {
+    color: var(--color-accent-cyan-bright);
+    text-shadow: none;
+    text-decoration-color: var(--color-accent-cyan);
+  }
+
   .article-content ul,
   .article-content ol {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     margin-bottom: 1rem;
     padding-left: 1.5rem;
   }
@@ -1215,7 +1115,7 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
   }
 
   html.light .article-content h4 {
-    color: var(--color-text-secondary-light);
+    color: var(--color-text-primary-light);
     border-left-color: #0969da;
   }
 
@@ -1225,7 +1125,10 @@ const categoryColor = getCategoryColorWithBg(tags[0]);
 
   html.light .article-content p,
   html.light .article-content ul,
-  html.light .article-content ol,
+  html.light .article-content ol {
+    color: var(--color-text-primary-light);
+  }
+
   html.light .article-content blockquote {
     color: var(--color-text-secondary-light);
   }

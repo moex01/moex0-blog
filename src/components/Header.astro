@@ -1,9 +1,9 @@
 ---
 const navLinks = [
-  { href: '/', label: 'Blog' },
-  { href: '/experience', label: 'Experience' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/about', label: 'whoami' },
+  { href: '/', label: 'HOME' },
+  { href: '/articles', label: 'ARTICLES' },
+  { href: '/projects', label: 'MY WORK' },
+  { href: '/about', label: 'ABOUT' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -24,7 +24,8 @@ const currentPath = Astro.url.pathname;
 
     <!-- Desktop Navigation -->
     <div class="hidden sm:flex items-center gap-6">
-      <ul class="flex items-center gap-4">
+      <!-- ENHANCEMENT: Increased gap from gap-4 to gap-6 for better spacing between nav items -->
+      <ul class="flex items-center gap-6">
         {navLinks.map(({ href, label }) => (
           <li>
             <a
@@ -56,6 +57,23 @@ const currentPath = Astro.url.pathname;
         <span class="font-mono text-xs">⌘K</span>
       </button>
 
+      <!-- Low-Effects Toggle Button -->
+      <button
+        id="low-effects-toggle"
+        class="text-[--color-text-secondary] hover:text-[--color-accent-cyan] transition-colors"
+        title="Toggle visual effects"
+        aria-label="Toggle visual effects"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 effects-icon-normal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 effects-icon-low hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+      </button>
+
       <!-- RSS Link -->
       <a
         href="/rss.xml"
@@ -85,6 +103,23 @@ const currentPath = Astro.url.pathname;
         </svg>
       </button>
 
+      <!-- Mobile Low-Effects Toggle Button -->
+      <button
+        id="mobile-low-effects-toggle"
+        class="flex items-center justify-center w-9 h-9 text-[--color-text-muted] hover:text-[--color-text-primary] bg-[--color-bg-tertiary] border border-[--color-border] rounded-md transition-colors"
+        title="Toggle visual effects"
+        aria-label="Toggle visual effects"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mobile-effects-icon-normal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mobile-effects-icon-low hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+      </button>
+
       <!-- Hamburger Button -->
       <button
         id="mobile-menu-btn"
@@ -103,9 +138,10 @@ const currentPath = Astro.url.pathname;
   </nav>
 
   <!-- Mobile Menu -->
+  <!-- ENHANCEMENT: Added backdrop-blur-md for better visual separation -->
   <div id="mobile-menu" class="mobile-menu hidden sm:hidden">
     <ul class="mobile-nav-links">
-      {navLinks.map(({ href, label }) => (
+      {navLinks.map(({ href, label }, index) => (
         <li>
           <a
             href={href}
@@ -114,8 +150,16 @@ const currentPath = Astro.url.pathname;
               (currentPath === href || (href !== '/' && currentPath.startsWith(href))) && 'active'
             ]}
           >
-            {label}
+            <!-- ENHANCEMENT: Added chevron icon for better visual recognition -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span>{label}</span>
           </a>
+          <!-- ENHANCEMENT: Added subtle dividers between menu items (not after last item) -->
+          {index < navLinks.length - 1 && (
+            <div class="mobile-nav-divider"></div>
+          )}
         </li>
       ))}
     </ul>
@@ -136,6 +180,80 @@ const currentPath = Astro.url.pathname;
 </header>
 
 <script>
+  // === LOW-EFFECTS TOGGLE FUNCTIONALITY ===
+  function initLowEffectsToggle() {
+    const desktopToggle = document.getElementById('low-effects-toggle');
+    const mobileToggle = document.getElementById('mobile-low-effects-toggle');
+    
+    // Initialize state from localStorage or prefers-reduced-motion
+    function getInitialState(): boolean {
+      // Check localStorage first
+      const stored = localStorage.getItem('lowEffects');
+      if (stored !== null) {
+        return stored === 'true';
+      }
+      
+      // Fall back to prefers-reduced-motion
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    // Apply low-effects state to document
+    function applyLowEffects(enabled: boolean) {
+      if (enabled) {
+        document.documentElement.classList.add('low-effects');
+      } else {
+        document.documentElement.classList.remove('low-effects');
+      }
+      
+      // Update icon states for both desktop and mobile
+      updateIcons(enabled);
+      
+      // Store preference
+      localStorage.setItem('lowEffects', enabled.toString());
+      
+      // Dispatch custom event for MatrixRain to listen to
+      window.dispatchEvent(new CustomEvent('low-effects-change', { detail: { enabled } }));
+    }
+
+    // Update icon visibility
+    function updateIcons(lowEffectsEnabled: boolean) {
+      // Desktop icons
+      const normalIcon = desktopToggle?.querySelector('.effects-icon-normal');
+      const lowIcon = desktopToggle?.querySelector('.effects-icon-low');
+      
+      // Mobile icons
+      const mobileNormalIcon = mobileToggle?.querySelector('.mobile-effects-icon-normal');
+      const mobileLowIcon = mobileToggle?.querySelector('.mobile-effects-icon-low');
+      
+      if (lowEffectsEnabled) {
+        normalIcon?.classList.add('hidden');
+        lowIcon?.classList.remove('hidden');
+        mobileNormalIcon?.classList.add('hidden');
+        mobileLowIcon?.classList.remove('hidden');
+      } else {
+        normalIcon?.classList.remove('hidden');
+        lowIcon?.classList.add('hidden');
+        mobileNormalIcon?.classList.remove('hidden');
+        mobileLowIcon?.classList.add('hidden');
+      }
+    }
+
+    // Toggle handler
+    function toggleLowEffects() {
+      const currentState = document.documentElement.classList.contains('low-effects');
+      applyLowEffects(!currentState);
+    }
+
+    // Attach event listeners
+    desktopToggle?.addEventListener('click', toggleLowEffects);
+    mobileToggle?.addEventListener('click', toggleLowEffects);
+
+    // Initialize on page load
+    const initialState = getInitialState();
+    applyLowEffects(initialState);
+  }
+
+  // === MOBILE MENU FUNCTIONALITY ===
   function initMobileMenu() {
     const menuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
@@ -185,17 +303,34 @@ const currentPath = Astro.url.pathname;
     });
   }
 
+  // Initialize both features
+  initLowEffectsToggle();
   initMobileMenu();
-  document.addEventListener('astro:after-swap', initMobileMenu);
+  
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:after-swap', () => {
+    initLowEffectsToggle();
+    initMobileMenu();
+  });
 </script>
 
 <style>
+  .site-header {
+    border-bottom-color: transparent;
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(100% - 1px),
+      color-mix(in srgb, var(--color-border) 60%, transparent) calc(100% - 1px),
+      color-mix(in srgb, var(--color-border) 60%, transparent) 100%
+    );
+  }
+
   /* Item 17: Progress bar with shimmer gradient animation */
   .header-progress-bar {
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 2px;
+    height: 3px;
     width: 0%;
     background: linear-gradient(
       90deg,
@@ -210,20 +345,42 @@ const currentPath = Astro.url.pathname;
   }
 
   /* Item 5: Subtle hover effect for navigation links */
+  /* ENHANCEMENT: Added underline-on-hover with smooth transition */
   .nav-link {
     display: inline-block;
+    position: relative;
     transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  /* ENHANCEMENT: Subtle underline that appears on hover */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0%;
+    height: 1px;
+    background: var(--color-accent-cyan);
+    transition: width 0.3s ease;
   }
 
   .nav-link:hover {
     transform: translateY(-1px);
   }
 
+  /* ENHANCEMENT: Underline expands on hover */
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
   /* Item 15: Mobile Menu with slide-down animation */
+  /* ENHANCEMENT: Strengthened background with darker shade and backdrop-blur for better contrast */
   .mobile-menu {
     padding: 1rem;
     border-top: 1px solid var(--color-border);
-    background: var(--color-bg-secondary);
+    background: rgba(13, 17, 23, 0.95); /* Darker background with slight transparency */
+    backdrop-filter: blur(12px); /* Blur effect for better visual separation */
+    -webkit-backdrop-filter: blur(12px); /* Safari support */
     max-height: 0;
     overflow: hidden;
     opacity: 0;
@@ -244,8 +401,11 @@ const currentPath = Astro.url.pathname;
     margin: 0 0 1rem 0;
   }
 
+  /* ENHANCEMENT: Mobile nav links now display with icon in a flex layout */
   .mobile-nav-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0.75rem 1rem;
     font-family: var(--font-mono);
     font-size: 0.9375rem;
@@ -255,14 +415,31 @@ const currentPath = Astro.url.pathname;
     transition: all 0.2s ease;
   }
 
+  /* ENHANCEMENT: Icon styling for mobile nav */
+  .mobile-nav-icon {
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* ENHANCEMENT: Icon animates forward on hover */
   .mobile-nav-link:hover {
     background: var(--color-bg-tertiary);
     color: var(--color-text-primary);
   }
 
+  .mobile-nav-link:hover .mobile-nav-icon {
+    opacity: 1;
+    transform: translateX(2px);
+  }
+
   .mobile-nav-link.active {
     color: var(--color-accent-cyan);
     background: rgba(56, 189, 248, 0.1);
+  }
+
+  .mobile-nav-link.active .mobile-nav-icon {
+    opacity: 1;
   }
 
   .mobile-menu-actions {
@@ -286,6 +463,20 @@ const currentPath = Astro.url.pathname;
 
   .mobile-action-link:hover {
     color: var(--color-accent-cyan);
+  }
+
+  /* ENHANCEMENT: Subtle dividers between mobile nav items */
+  .mobile-nav-divider {
+    height: 1px;
+    margin: 0.25rem 1rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-border) 20%,
+      var(--color-border) 80%,
+      transparent
+    );
+    opacity: 0.5;
   }
 
 </style>

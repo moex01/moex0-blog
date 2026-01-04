@@ -50,9 +50,11 @@ const updatedAgo = updatedDate ? getUpdatedAgo(updatedDate, pubDate) : null;
 const accentColor = getCategoryColor(tags[0]);
 ---
 
-<article class="hero-card" style={`--hero-accent: ${accentColor};`}>
+<article class="hero-card glow-corners" style={`--hero-accent: ${accentColor}; --corner-color: ${accentColor};`}>
   <!-- Latest Badge -->
-  <span class="hero-badge">Latest</span>
+  <span class="hero-badge">
+    <span class="badge-prefix">&gt;_</span> LATEST
+  </span>
 
   <!-- Background Image -->
   {image && (
@@ -99,7 +101,7 @@ const accentColor = getCategoryColor(tags[0]);
       )}
     </div>
 
-    <a href={`/blog/${slug}`} class="hero-title-link">
+    <a href={`/articles/${slug}`} class="hero-title-link">
       <h2 class="hero-title" transition:name={`article-title-${slug}`}>
         {title}
       </h2>
@@ -109,7 +111,7 @@ const accentColor = getCategoryColor(tags[0]);
       {description}
     </p>
 
-    <a href={`/blog/${slug}`} class="hero-cta">
+    <a href={`/articles/${slug}`} class="hero-cta">
       <span>Read Article</span>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M5 12h14"/>
@@ -119,7 +121,7 @@ const accentColor = getCategoryColor(tags[0]);
   </div>
 
   <!-- Clickable overlay -->
-  <a href={`/blog/${slug}`} class="hero-link-overlay" aria-label={`Read: ${title}`}></a>
+  <a href={`/articles/${slug}`} class="hero-link-overlay" aria-label={`Read: ${title}`}></a>
 </article>
 
 <style>
@@ -149,7 +151,7 @@ const accentColor = getCategoryColor(tags[0]);
       0 0 0 1px color-mix(in srgb, var(--hero-accent) 30%, transparent);
   }
 
-  /* Latest Badge */
+  /* Latest Badge - Terminal Style */
   .hero-badge {
     position: absolute;
     top: 1rem;
@@ -165,18 +167,43 @@ const accentColor = getCategoryColor(tags[0]);
     letter-spacing: 0.08em;
     border-radius: 0.25rem;
     box-shadow: 0 2px 8px rgba(52, 211, 153, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* Terminal prefix with subtle blink */
+  .badge-prefix {
+    color: rgba(0, 0, 0, 0.65);
+    font-weight: 700;
+    animation: cursor-blink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes cursor-blink {
+    0%, 45% {
+      opacity: 1;
+    }
+    50%, 95% {
+      opacity: 0.35;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 
   /* Background Image */
   .hero-image-wrapper {
     position: absolute;
-    inset: 0;
+    inset: -1px; /* Extended 1px to prevent sub-pixel gap with border-radius */
     z-index: 0;
   }
 
   .hero-image {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
+    display: block;
     object-fit: cover;
     object-position: center;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);

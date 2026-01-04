@@ -3,7 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroCard from '../components/HeroCard.astro';
 import ArticleListItemWide from '../components/ArticleListItemWide.astro';
 import WebSiteSchema from '../components/WebSiteSchema.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
+
+// Get home page content from markdown
+const homeContent = await getEntry('pages', 'home');
+const heroTitle = homeContent?.data.title || 'moex0';
+const heroDescription = homeContent?.data.description || 'Cybersecurity researcher & DFIR specialist';
+const heroCredentials = homeContent?.data.credentials || '';
 
 // Get all blog posts, sorted by date (newest first)
 const posts = (await getCollection('blog', ({ data }) => {
@@ -21,7 +27,7 @@ function getReadingTime(content: string): string {
 const [featuredPost, ...otherPosts] = posts;
 ---
 
-<BaseLayout title="Blog" description="Cybersecurity articles, threat intelligence, and security research by moex0">
+<BaseLayout title="Blog" description={heroDescription}>
   <!-- JSON-LD Structured Data -->
   <WebSiteSchema slot="head" />
 
@@ -47,15 +53,22 @@ const [featuredPost, ...otherPosts] = posts;
   </div>
 
   <!-- Hero Section -->
-  <section class="hero-section">
+  <section class="hero-section grid-overlay">
     <div class="hero-content">
       <!-- Glitch title with typing effect -->
-      <h1 class="hero-title" data-text="~/moex0">
-        <span class="hero-prefix">~/</span><span class="hero-name">moex0</span><span class="hero-cursor">_</span>
+      <h1 class="hero-title" data-text={`~/${heroTitle}`}>
+        <span class="hero-prefix">~/</span><span class="hero-name">{heroTitle}</span><span class="hero-cursor">_</span>
       </h1>
       <p class="hero-description">
-        Cybersecurity researcher & threat intelligence analyst. Writing about APT groups, malware analysis, vulnerability research, and defensive security.
+        {heroDescription}
       </p>
+      
+      <!-- ADDED: Credentials microcopy -->
+      {heroCredentials && (
+        <p class="hero-credentials">
+          {heroCredentials}
+        </p>
+      )}
       
       <!-- Subtle scanline effect -->
       <div class="scanline" aria-hidden="true"></div>
@@ -72,7 +85,7 @@ const [featuredPost, ...otherPosts] = posts;
     </div>
 
     {posts.length === 0 ? (
-      <div class="empty-state">
+      <div class="empty-state console-panel">
         <p class="empty-text">
           <span class="empty-prompt">$</span> No articles yet. Check back soon!
         </p>
@@ -81,16 +94,18 @@ const [featuredPost, ...otherPosts] = posts;
       <div class="articles-container">
         {/* Hero: Latest/Featured post */}
         {featuredPost && (
-          <HeroCard
-            title={featuredPost.data.title}
-            description={featuredPost.data.description}
-            pubDate={featuredPost.data.pubDate}
-            updatedDate={featuredPost.data.updatedDate}
-            slug={featuredPost.slug}
-            tags={featuredPost.data.tags}
-            readingTime={getReadingTime(featuredPost.body || '')}
-            image={featuredPost.data.image}
-          />
+          <div id="featured-article">
+            <HeroCard
+              title={featuredPost.data.title}
+              description={featuredPost.data.description}
+              pubDate={featuredPost.data.pubDate}
+              updatedDate={featuredPost.data.updatedDate}
+              slug={featuredPost.slug}
+              tags={featuredPost.data.tags}
+              readingTime={getReadingTime(featuredPost.body || '')}
+              image={featuredPost.data.image}
+            />
+          </div>
         )}
 
         {/* Previous Articles List */}
@@ -128,27 +143,52 @@ const [featuredPost, ...otherPosts] = posts;
     const bootOverlay = document.getElementById('boot-sequence');
     if (!bootOverlay) return;
 
+    // ADDED: Check localStorage for first visit flag
+    const hasSeenBoot = localStorage.getItem('hasSeenBoot') === 'true';
+    
+    // ADDED: Skip automatically on subsequent visits
+    if (hasSeenBoot) {
+      bootOverlay.remove();
+      return;
+    }
+
     // Show boot sequence
     bootOverlay.style.display = 'flex';
     bootOverlay.setAttribute('aria-hidden', 'false');
 
     const lines = bootOverlay.querySelectorAll('.boot-line');
+    let animationTimeouts: ReturnType<typeof setTimeout>[] = [];
+    let fadeOutTimeout: ReturnType<typeof setTimeout> | null = null;
 
+    // Function to complete boot sequence
+    function completeBootSequence() {
+      // Clear any pending timeouts
+      animationTimeouts.forEach(timeout => clearTimeout(timeout));
+      if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
+
+      // Store flag in localStorage
+      localStorage.setItem('hasSeenBoot', 'true');
+
+      // Fade out
+      if (bootOverlay) {
+        bootOverlay.classList.add('fade-out');
+        setTimeout(() => {
+          bootOverlay?.remove();
+        }, 500);
+      }
+    }
+
+    // Animate boot lines
     lines.forEach((line) => {
       const delay = parseInt(line.getAttribute('data-delay') || '0');
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         line.classList.add('visible');
       }, delay);
+      animationTimeouts.push(timeout);
     });
 
-    // Fade out after animation completes
-    setTimeout(() => {
-      bootOverlay.classList.add('fade-out');
-
-      setTimeout(() => {
-        bootOverlay.remove();
-      }, 500);
-    }, 2200);
+    // Fade out after animation completes (2.2s to match original site timing)
+    fadeOutTimeout = setTimeout(completeBootSequence, 2200);
   }
 
   // Glitch effect on hover
@@ -334,6 +374,108 @@ const [featuredPost, ...otherPosts] = posts;
     z-index: 2;
   }
 
+  /* ADDED: Credentials microcopy styling */
+  .hero-credentials {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 1rem 0 0 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* CTA buttons container */
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Primary CTA button - terminal style with border and glow */
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-accent-green);
+    background: transparent;
+    border: 1px solid var(--color-accent-green);
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent-green);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+  }
+
+  .cta-primary:hover {
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .cta-primary:hover::before {
+    opacity: 0.1;
+  }
+
+  .cta-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.2);
+  }
+
+  /* Secondary CTA link - subtle text link */
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .cta-secondary::before {
+    content: '$ ';
+    color: var(--color-accent-cyan);
+    margin-right: 0.25rem;
+  }
+
+  .cta-secondary:hover {
+    color: var(--color-accent-cyan);
+  }
+
+  .cta-secondary:active {
+    color: var(--color-text-primary);
+  }
+
+  /* Smooth scroll behavior for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   /* ========================================
      Articles Section
      ======================================== */
@@ -453,6 +595,29 @@ const [featuredPost, ...otherPosts] = posts;
 
   .empty-prompt {
     color: var(--color-accent-green);
+  }
+
+  /* ========================================
+     Responsive Adjustments
+     ======================================== */
+  @media (max-width: 640px) {
+    .hero-credentials {
+      font-size: 0.75rem;
+      margin-top: 0.875rem;
+    }
+
+    .hero-ctas {
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .cta-primary,
+    .cta-secondary {
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+    }
   }
 
   /* ========================================

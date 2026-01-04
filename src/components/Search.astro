@@ -1,5 +1,28 @@
 ---
 // Search Modal - Terminal-style search with Pagefind full-text search
+import { getCollection } from 'astro:content';
+
+// CHANGE 1: Fetch recent blog posts for empty state suggestions
+const allPosts = await getCollection('blog', ({ data }) => data.draft !== true);
+const sortedPosts = allPosts.sort((a, b) => 
+  new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+);
+const suggestedPosts = sortedPosts.slice(0, 5); // Get 5 most recent posts
+
+const tagCounts = allPosts.reduce((acc, post) => {
+  post.data.tags.forEach((tag: string) => {
+    acc[tag] = (acc[tag] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const topTags = Object.entries(tagCounts)
+  .sort(([tagA, countA], [tagB, countB]) => {
+    if (countB !== countA) return countB - countA;
+    return tagA.localeCompare(tagB);
+  })
+  .slice(0, 8)
+  .map(([tag]) => tag);
 ---
 
 <div id="search-modal" class="search-modal" aria-hidden="true">
@@ -26,12 +49,57 @@
       <span id="search-loading" class="search-loading hidden">Searching...</span>
     </div>
     <div id="search-results" class="search-results">
-      <div class="search-hint">
-        <span class="text-[--color-text-muted]">Press</span>
-        <kbd>↑</kbd><kbd>↓</kbd>
-        <span class="text-[--color-text-muted]">to navigate</span>
-        <kbd>Enter</kbd>
-        <span class="text-[--color-text-muted]">to select</span>
+      <!-- CHANGE 2: Empty state with suggestions -->
+      <div id="search-empty-state" class="search-empty-state">
+        <div class="search-suggestions-header">
+          <span class="text-[--color-accent-cyan]">></span>
+          <span class="text-[--color-text-muted]">Recent Articles</span>
+        </div>
+        <div class="search-suggestions">
+          {suggestedPosts.map((post, index) => (
+            <a 
+              href={`/articles/${post.slug}`} 
+              class={`search-result ${index === 0 ? 'active' : ''}`}
+              data-index={index}
+            >
+              <div class="search-result-title">{post.data.title}</div>
+              <div class="search-result-excerpt">{post.data.description}</div>
+            </a>
+          ))}
+        </div>
+        <div class="search-prompt-suggestions">
+          <span class="text-[--color-text-muted]">Try searching for:</span>
+          <span class="search-keywords">
+            <button class="search-keyword" type="button" data-search-query="kerberos">kerberos</button>
+            <button class="search-keyword" type="button" data-search-query="apt29">apt29</button>
+            <button class="search-keyword" type="button" data-search-query="incident response">incident response</button>
+          </span>
+        </div>
+        {topTags.length > 0 && (
+          <div class="search-tag-group">
+            <span class="search-tag-label">
+              <span class="text-[--color-accent-green]">$</span> popular tags
+            </span>
+            <div class="search-tag-chips">
+              {topTags.map((tag) => (
+                <button
+                  class="search-tag-chip"
+                  type="button"
+                  data-search-query={tag}
+                >
+                  <span class="tag-hash">#</span>{tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div class="search-hint">
+          <span class="text-[--color-text-muted]">Press</span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+          <span class="text-[--color-text-muted]">to navigate</span>
+          <kbd>Enter</kbd>
+          <span class="text-[--color-text-muted]">to select</span>
+        </div>
       </div>
     </div>
   </div>
@@ -211,6 +279,114 @@
     color: var(--color-text-muted);
   }
 
+  /* CHANGE 3: Empty state styling */
+  .search-empty-state {
+    display: block;
+  }
+
+  .search-empty-state.hidden {
+    display: none;
+  }
+
+  .search-suggestions-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .search-suggestions {
+    margin-bottom: 1rem;
+  }
+
+  .search-prompt-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .search-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .search-keyword {
+    color: var(--color-accent-cyan);
+    padding: 0.125rem 0.5rem;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .search-keyword:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-accent-cyan);
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  .search-tag-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0;
+  }
+
+  .search-tag-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .search-tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .search-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .search-tag-chip .tag-hash {
+    color: var(--color-accent-indigo);
+  }
+
+  .search-tag-chip:hover {
+    color: var(--color-accent-cyan);
+    border-color: var(--color-accent-cyan);
+    background: rgba(56, 189, 248, 0.08);
+  }
+
 </style>
 
 <script is:inline>
@@ -245,20 +421,13 @@
   function closeSearch() {
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
-    const results = document.getElementById('search-results');
-    if (modal && input && results) {
+    const emptyState = document.getElementById('search-empty-state');
+    if (modal && input && emptyState) {
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
       input.value = '';
-      results.innerHTML = `
-        <div class="search-hint">
-          <span class="text-[--color-text-muted]">Press</span>
-          <kbd>↑</kbd><kbd>↓</kbd>
-          <span class="text-[--color-text-muted]">to navigate</span>
-          <kbd>Enter</kbd>
-          <span class="text-[--color-text-muted]">to select</span>
-        </div>
-      `;
+      // CHANGE 4: Show empty state when closing search
+      emptyState.classList.remove('hidden');
       activeIndex = 0;
     }
   }
@@ -266,24 +435,36 @@
   async function search(query) {
     const results = document.getElementById('search-results');
     const loading = document.getElementById('search-loading');
+    const emptyState = document.getElementById('search-empty-state');
     if (!results) return;
 
+    // CHANGE 5: Show empty state with suggestions when query is empty
     if (!query.trim()) {
-      results.innerHTML = `
-        <div class="search-hint">
-          <span class="text-[--color-text-muted]">Press</span>
-          <kbd>↑</kbd><kbd>↓</kbd>
-          <span class="text-[--color-text-muted]">to navigate</span>
-          <kbd>Enter</kbd>
-          <span class="text-[--color-text-muted]">to select</span>
-        </div>
-      `;
+      if (emptyState) {
+        emptyState.classList.remove('hidden');
+      }
+      activeIndex = 0;
+      // Re-add active class to first suggestion
+      const firstResult = document.querySelector('.search-result[data-index="0"]');
+      if (firstResult) {
+        document.querySelectorAll('.search-result').forEach(r => r.classList.remove('active'));
+        firstResult.classList.add('active');
+      }
       return;
     }
 
-    // Item 16: Show skeleton loading state while searching
+    // CHANGE 6: Hide empty state when searching
+    if (emptyState) {
+      emptyState.classList.add('hidden');
+    }
+
+    // CHANGE 7: Show loading state - clear results container first
     if (loading) loading.classList.remove('hidden');
-    results.innerHTML = `
+    
+    // Create a temporary loading container
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'search-loading-state';
+    loadingDiv.innerHTML = `
       <div class="search-skeleton" style="padding: 1rem;">
         <div class="skeleton-line w-3-4"></div>
         <div class="skeleton-line w-1-2"></div>
@@ -291,16 +472,22 @@
         <div class="skeleton-line w-3-4"></div>
       </div>
     `;
+    results.appendChild(loadingDiv);
 
     const pf = await loadPagefind();
     if (!pf) {
       if (loading) loading.classList.add('hidden');
-      results.innerHTML = `
-        <div class="search-no-results">
-          <p>Search unavailable</p>
-          <p class="text-xs mt-2">Run 'npm run build' to generate search index</p>
-        </div>
+      // CHANGE 8: Clear loading state and show error
+      const loadingState = results.querySelector('.search-loading-state');
+      if (loadingState) loadingState.remove();
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'search-no-results';
+      errorDiv.innerHTML = `
+        <p>Search unavailable</p>
+        <p class="text-xs mt-2">Run 'npm run build' to generate search index</p>
       `;
+      results.appendChild(errorDiv);
       return;
     }
 
@@ -309,13 +496,18 @@
 
     activeIndex = 0;
 
+    // CHANGE 9: Clear loading state
+    const loadingState = results.querySelector('.search-loading-state');
+    if (loadingState) loadingState.remove();
+
     if (searchResults.results.length === 0) {
-      results.innerHTML = `
-        <div class="search-no-results">
-          <p>$ grep "${query}" ./articles</p>
-          <p>No matches found</p>
-        </div>
+      const noResultsDiv = document.createElement('div');
+      noResultsDiv.className = 'search-no-results';
+      noResultsDiv.innerHTML = `
+        <p>$ grep "${query}" ./articles</p>
+        <p>No matches found</p>
       `;
+      results.appendChild(noResultsDiv);
       return;
     }
 
@@ -327,12 +519,15 @@
       })
     );
 
-    results.innerHTML = detailedResults.map((result, index) => `
+    // CHANGE 10: Create results container
+    const resultsContainer = document.createElement('div');
+    resultsContainer.innerHTML = detailedResults.map((result, index) => `
       <a href="${result.url}" class="search-result ${index === 0 ? 'active' : ''}" data-index="${index}">
         <div class="search-result-title">${result.meta?.title || 'Untitled'}</div>
         <div class="search-result-excerpt">${result.excerpt || ''}</div>
       </a>
     `).join('');
+    results.appendChild(resultsContainer);
   }
 
   function navigateResults(direction) {
@@ -416,6 +611,22 @@
           e.preventDefault();
           selectResult();
         }
+      });
+    }
+
+    if (modal && input) {
+      modal.addEventListener('click', (e) => {
+        const target = e.target;
+        const chip = target instanceof HTMLElement
+          ? target.closest('[data-search-query]')
+          : null;
+        if (!chip) return;
+        e.preventDefault();
+        const query = chip.getAttribute('data-search-query') || '';
+        if (!query) return;
+        input.value = query;
+        search(query);
+        input.focus();
       });
     }
 

@@ -18,6 +18,8 @@ const pages = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string().optional(),
+    credentials: z.string().optional(), // For home page credentials line
+    command: z.string().optional(),
   }),
 });
 

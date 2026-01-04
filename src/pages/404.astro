@@ -3,7 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="404 - Not Found" description="Page not found">
-  <div class="error-page">
+  <!-- Added .grid-overlay for immersive cyber-grid backdrop -->
+  <div class="error-page grid-overlay">
     <!-- Terminal Window -->
     <div class="terminal-window">
       <div class="terminal-header">
@@ -57,7 +58,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </a>
           <a href="/about" class="suggestion-link">
             <span class="suggestion-icon">?</span>
-            <span class="suggestion-text">whoami</span>
+            <span class="suggestion-text">ABOUT</span>
             <span class="suggestion-desc">About me</span>
           </a>
         </div>

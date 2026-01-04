@@ -41,7 +41,7 @@ const filteredHeadings = headings.filter(h => h.depth >= 2 && h.depth <= 3);
       </ul>
     </details>
 
-    <div class="toc-desktop hidden md:block">
+    <div class="toc-desktop console-panel hidden md:block">
       <h3 class="toc-title">
         <span class="text-[--color-accent-green]">$</span> cat ./contents
       </h3>
@@ -66,6 +66,12 @@ const filteredHeadings = headings.filter(h => h.depth >= 2 && h.depth <= 3);
 <style>
   .toc {
     margin-bottom: 2rem;
+  }
+
+  /* Desktop TOC - Compact width to fit content */
+  .toc-desktop {
+    max-width: fit-content;
+    min-width: 220px;
   }
 
   .toc-title {

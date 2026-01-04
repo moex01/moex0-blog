@@ -27,8 +27,8 @@ const truncatedDesc = description.length > 80
   : description;
 ---
 
-<article class="grid-card" style={`--card-accent: ${accentColor};`}>
-  <a href={`/blog/${slug}`} class="grid-card-link">
+<article class="grid-card glow-corners glow-corners-soft" style={`--card-accent: ${accentColor}; --corner-color: ${accentColor};`}>
+  <a href={`/articles/${slug}`} class="grid-card-link">
     <!-- Image -->
     <div class="grid-card-image">
       {image ? (
@@ -252,6 +252,17 @@ const truncatedDesc = description.length > 80
   .grid-card:hover .grid-card-arrow {
     background: var(--card-accent);
     color: #000;
+  }
+
+  /* Mobile optimization: Reduce transform effects on mobile */
+  @media (max-width: 768px) {
+    .grid-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .grid-card:hover .grid-card-image img {
+      transform: scale(1.04);
+    }
   }
 
   /* Reduced motion */

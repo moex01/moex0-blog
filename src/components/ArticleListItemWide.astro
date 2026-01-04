@@ -56,7 +56,7 @@ const truncatedDesc = description.length > 120
 ---
 
 <article class="list-item-wide" style={`--item-accent: ${accentColor};`}>
-  <a href={`/blog/${slug}`} class="list-item-link">
+  <div class="list-item-link">
     <!-- Wide Thumbnail (16:9) -->
     {image ? (
       <div class="list-item-thumbnail">
@@ -116,7 +116,7 @@ const truncatedDesc = description.length > 120
       <div class="list-item-bottom">
         <div class="list-item-tags">
           {tags.slice(1, 4).map((tag) => (
-            <span class="list-item-tag">#{tag}</span>
+            <a href={`/tags/${tag}`} class="list-item-tag">#{tag}</a>
           ))}
         </div>
         <span class="list-item-arrow">
@@ -128,7 +128,8 @@ const truncatedDesc = description.length > 120
         </span>
       </div>
     </div>
-  </a>
+  </div>
+  <a href={`/articles/${slug}`} class="list-item-overlay" aria-label={`Read: ${title}`}></a>
 </article>
 
 <style>
@@ -159,10 +160,8 @@ const truncatedDesc = description.length > 120
   .list-item-wide:hover {
     border-color: var(--item-accent);
     background: var(--color-bg-tertiary);
-    transform: translateY(-2px);
-    box-shadow:
-      0 8px 20px -4px rgba(0, 0, 0, 0.2),
-      0 0 0 1px color-mix(in srgb, var(--item-accent) 25%, transparent);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.3);
   }
 
   .list-item-wide:hover::before {
@@ -172,6 +171,16 @@ const truncatedDesc = description.length > 120
   .list-item-link {
     display: flex;
     flex-direction: row;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .list-item-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
     text-decoration: none;
   }
 
@@ -324,9 +333,14 @@ const truncatedDesc = description.length > 120
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    pointer-events: auto;
+    position: relative;
+    z-index: 3;
   }
 
   .list-item-tag {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-mono);
     font-size: 0.625rem;
     color: var(--color-text-secondary);
@@ -337,12 +351,18 @@ const truncatedDesc = description.length > 120
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.2rem;
     transition: all 0.2s ease;
+    text-decoration: none;
+    text-shadow: none;
+    pointer-events: auto;
+    position: relative;
+    z-index: 3;
   }
 
   .list-item-tag:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--item-accent);
     color: var(--item-accent);
+    text-shadow: none;
   }
 
   .list-item-arrow {
@@ -407,11 +427,18 @@ const truncatedDesc = description.length > 120
     }
 
     .list-item-description {
-      display: none;
+      font-size: 0.75rem;
+      -webkit-line-clamp: 1;
     }
 
     .arrow-text {
-      display: none;
+      display: inline;
+      opacity: 1;
+      transform: none;
+    }
+
+    .list-item-arrow {
+      color: var(--item-accent);
     }
   }
 

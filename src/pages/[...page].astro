@@ -14,6 +14,10 @@ const { page } = Astro.props;
 const { Content } = await page.render();
 ---
 
-<PageLayout title={page.data.title} description={page.data.description}>
+<PageLayout
+  title={page.data.title}
+  description={page.data.description}
+  command={page.data.command}
+>
   <Content />
 </PageLayout>

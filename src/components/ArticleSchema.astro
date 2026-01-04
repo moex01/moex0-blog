@@ -13,7 +13,7 @@ const { title, description, pubDate, updatedDate, image, tags = [], slug } = Ast
 
 // Site configuration
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://moex01.github.io/moex0-blog';
-const articleUrl = `${siteUrl}/blog/${slug}`;
+const articleUrl = `${siteUrl}/articles/${slug}`;
 const imageUrl = image ? new URL(image, siteUrl).toString() : `${siteUrl}/og/${slug}.png`;
 
 // Author information

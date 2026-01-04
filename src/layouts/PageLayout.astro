@@ -4,16 +4,28 @@ import BaseLayout from './BaseLayout.astro';
 interface Props {
   title: string;
   description?: string;
+  command?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, command } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
-  <article class="page-content max-w-2xl">
+  <article class="page-content console-panel max-w-2xl">
     <header class="mb-8">
       <h1 class="text-3xl md:text-4xl font-bold text-[--color-text-primary] mb-4 font-mono">
-        <span class="text-[--color-accent-green]">$</span> {title}
+        {command ? (
+          <>
+            <span class="text-[--color-accent-green]">&gt;</span>
+            <span class="text-[--color-text-muted] cursor-blink">_</span>
+            <span class="ml-2">{command}</span>
+          </>
+        ) : (
+          <>
+            <span class="text-[--color-accent-green]">$</span>
+            <span class="ml-2">{title}</span>
+          </>
+        )}
       </h1>
       {description && (
         <p class="text-lg text-[--color-text-secondary]">{description}</p>
@@ -68,7 +80,7 @@ const { title, description } = Astro.props;
   }
 
   .page-content .prose a:hover {
-    color: var(--color-accent-green);
+    color: var(--color-accent-cyan-bright);
     text-decoration: underline;
   }
 
@@ -76,6 +88,14 @@ const { title, description } = Astro.props;
   .page-content .prose ol {
     margin-bottom: 1rem;
     padding-left: 1.5rem;
+  }
+
+  .page-content .prose ul {
+    list-style-type: disc;
+  }
+
+  .page-content .prose ol {
+    list-style-type: decimal;
   }
 
   .page-content .prose li {
@@ -136,6 +156,26 @@ const { title, description } = Astro.props;
     border: none;
     border-top: 1px solid var(--color-border);
     margin: 2rem 0;
+  }
+
+  .page-content .about-social-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .page-content .about-social-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  .page-content .about-social-link:hover {
+    color: var(--color-accent-cyan-bright);
+    text-decoration: none;
+    transform: translateY(-2px);
   }
 
   /* Card-like sections using blockquotes with special markers */
